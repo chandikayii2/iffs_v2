@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/V1/Auth/AuthController.php (Updated)
 
 namespace App\Http\Controllers\V1\Auth;
 
@@ -12,7 +13,6 @@ use App\Models\IssueNote;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Services\Interfaces\AuthServiceInterface;
-
 
 class AuthController extends Controller
 {
@@ -37,12 +37,16 @@ class AuthController extends Controller
         // Get the count of issue notes
         $issueNoteCount = IssueNote::count();
 
+        // Get user permissions
+        $getLoginUserPermission = session('user_permissions', []);
+
         // Pass the counts to the view
         return view('dashboard', [
             'purchaseOrderCount' => $purchaseOrderCount,
             'grnCount' => $grnCount,
             'stockCount' => $stockCount,
             'issueNoteCount' => $issueNoteCount,
+            'getLoginUserPermission' => $getLoginUserPermission,
         ]);
     }
 
@@ -65,7 +69,13 @@ class AuthController extends Controller
         $response = $this->authService->loginCheck($attributes);
 
         if ($response['status'] === 200) {
-            return redirect()->route('dashboard')->with(['message' => $response['message'], 'data' => $response['data'], 'status' => $response['status']]);
+            // Store user permissions in session
+            if (isset($response['data']['permissions'])) {
+                session(['user_permissions' => $response['data']['permissions']]);
+            }
+            
+            // Redirect to welcome page instead of dashboard directly
+            return redirect()->route('welcome')->with(['message' => $response['message'], 'data' => $response['data'], 'status' => $response['status']]);
         } else {
             return redirect()->route('login')->withErrors(['message' => $response['message']]);
         }
@@ -74,6 +84,7 @@ class AuthController extends Controller
     public function logout()
     {
         Auth::logout();
+        session()->flush(); // Clear all session data
         return redirect('/login');
     }
 }

@@ -1,0 +1,352 @@
+<!-- resources/views/tire/inventory/edit.blade.php -->
+@extends('tire.layouts.app')
+
+@section('content')
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div class="page-title">
+        <h4><i class="fas fa-edit me-2"></i>Edit Tire</h4>
+        <h6>Update tire information - {{ $tire->serial_number }}</h6>
+    </div>
+    <div class="page-btn">
+        <a href="{{ route('tire.inventory.show', $tire->id) }}" class="btn btn-info">
+            <i class="fas fa-eye me-1"></i> View Details
+        </a>
+        <a href="{{ route('tire.inventory.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Edit Tire Information</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ route('tire.inventory.update', $tire->id) }}" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="row">
+                <div class="col-lg-6 col-sm-12">
+                    <div class="form-group">
+                        <label>Serial Number</label>
+                        <p class="form-control-static"><strong>{{ $tire->serial_number }}</strong></p>
+                        <small class="text-muted">Serial number cannot be changed</small>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <p>
+                            @php
+                                $badgeClass = 'badge-soft-success';
+                                if($tire->status == 'new') $badgeClass = 'badge-soft-success';
+                                elseif($tire->status == 'in_use') $badgeClass = 'badge-soft-primary';
+                                elseif($tire->status == 'used') $badgeClass = 'badge-soft-warning';
+                                elseif($tire->status == 'at_vendor') $badgeClass = 'badge-soft-danger';
+                                elseif($tire->status == 'scrap') $badgeClass = 'badge-soft-dark';
+                            @endphp
+                            <span class="badge {{ $badgeClass }}">{{ ucfirst(str_replace('_', ' ', $tire->status)) }}</span>
+                        </p>
+                        <small class="text-muted">Status changes automatically based on actions</small>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="form-group">
+                        <div class="d-flex">
+                        <label>Brand *</label>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <select name="brand" class="form-control select2" id="brandSelect" required>
+                                <option value="">Select or type new brand</option>
+                                @foreach($brands ?? [] as $brand)
+                                    <option value="{{ $brand }}" {{ $tire->brand == $brand ? 'selected' : '' }}>{{ $brand }}</option>
+                                @endforeach
+                            </select>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="form-group">
+                        <div class="d-flex">
+                        <label>Size *</label>
+                         <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSizeModal">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <select name="size" class="form-control select2" id="sizeSelect" required>
+                                <option value="">Select or type new size</option>
+                                @foreach($sizes ?? [] as $size)
+                                    <option value="{{ $size }}" {{ $tire->size == $size ? 'selected' : '' }}>{{ $size }}</option>
+                                @endforeach
+                            </select>
+                           
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="form-group">
+                        <div class="d-flex">
+                        <label>Type *</label>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <select name="type" class="form-control select2" id="typeSelect" required>
+                                <option value="">Select or type new type</option>
+                                @foreach($types ?? [] as $type)
+                                    <option value="{{ $type }}" {{ $tire->type == $type ? 'selected' : '' }}>{{ $type }}</option>
+                                @endforeach
+                            </select>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="form-group">
+                        <div class="d-flex">
+                        <label>Vendor/Supplier</label>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVendorModal">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <select name="vendor_id" class="form-control select2" id="vendorSelect">
+                                <option value="">-- Select Vendor --</option>
+                                @foreach($vendors ?? [] as $vendor)
+                                    <option value="{{ $vendor->id }}" {{ $tire->vendor_id == $vendor->id ? 'selected' : '' }}>
+                                        {{ $vendor->name }} - {{ $vendor->contact_person }} ({{ $vendor->phone }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            
+                        </div>
+                        <small class="text-muted">The vendor/supplier of this tire</small>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="form-group">
+                        <label>Max Refills</label>
+                        <input type="number" name="max_refills" class="form-control" value="{{ $tire->max_refills }}" min="0" max="10">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="form-group">
+                        <label>Purchase Date</label>
+                        <p>{{ $tire->purchase_date->format('d-m-Y') }}</p>
+                        <small class="text-muted">Purchase date cannot be changed</small>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="form-group">
+                        <label>Purchase Price</label>
+                        <p>${{ number_format($tire->purchase_price, 2) }}</p>
+                        <small class="text-muted">Purchase price cannot be changed</small>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="form-group">
+                        <label>Consumed Mileage</label>
+                        <p><strong>{{ number_format($tire->consumption_mileage) }} km</strong></p>
+                        <small class="text-muted">Total kilometers this tire has traveled</small>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" class="form-control" rows="3">{{ $tire->notes }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Update Tire
+                </button>
+                <a href="{{ route('tire.inventory.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Brand Modal -->
+<div class="modal fade" id="addBrandModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Brand</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="newBrand" class="form-control" placeholder="Enter brand name">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNewOption('brand')">Add Brand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Size Modal -->
+<div class="modal fade" id="addSizeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Size</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="newSize" class="form-control" placeholder="Enter size">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNewOption('size')">Add Size</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Type Modal -->
+<div class="modal fade" id="addTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Type</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="newType" class="form-control" placeholder="Enter type">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNewOption('type')">Add Type</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Vendor Modal -->
+<div class="modal fade" id="addVendorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Vendor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Company Name *</label>
+                    <input type="text" id="newVendorName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Contact Person *</label>
+                    <input type="text" id="newVendorContact" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Phone *</label>
+                    <input type="text" id="newVendorPhone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="newVendorEmail" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Address *</label>
+                    <textarea id="newVendorAddress" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNewVendor()">Add Vendor</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        $('#brandSelect, #sizeSelect, #typeSelect, #vendorSelect').select2({
+            tags: true,
+            placeholder: "Select or type new",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+    
+    function addNewOption(type) {
+        let newValue = '';
+        let selectElement = '';
+        
+        if (type === 'brand') {
+            newValue = $('#newBrand').val();
+            selectElement = '#brandSelect';
+        } else if (type === 'size') {
+            newValue = $('#newSize').val();
+            selectElement = '#sizeSelect';
+        } else if (type === 'type') {
+            newValue = $('#newType').val();
+            selectElement = '#typeSelect';
+        }
+        
+        if (newValue.trim() === '') {
+            Swal.fire('Error', 'Please enter a value', 'error');
+            return;
+        }
+        
+        var newOption = new Option(newValue, newValue, true, true);
+        $(selectElement).append(newOption).trigger('change');
+        
+        $(`#add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`).modal('hide');
+        $(`#new${type.charAt(0).toUpperCase() + type.slice(1)}`).val('');
+        
+        Swal.fire('Success', `${type} added successfully!`, 'success');
+    }
+    
+    function addNewVendor() {
+        let vendorData = {
+            name: $('#newVendorName').val(),
+            contact_person: $('#newVendorContact').val(),
+            phone: $('#newVendorPhone').val(),
+            email: $('#newVendorEmail').val(),
+            address: $('#newVendorAddress').val(),
+            _token: '{{ csrf_token() }}'
+        };
+        
+        if (!vendorData.name || !vendorData.contact_person || !vendorData.phone || !vendorData.address) {
+            Swal.fire('Error', 'Please fill in all required fields', 'error');
+            return;
+        }
+        
+        $.ajax({
+            url: '{{ route("tire.refilling.vendors.store") }}',
+            type: 'POST',
+            data: vendorData,
+            success: function(response) {
+                if (response.success) {
+                    var newOption = new Option(response.vendor_display, response.vendor_id, true, true);
+                    $('#vendorSelect').append(newOption).trigger('change');
+                    $('#addVendorModal').modal('hide');
+                    $('#newVendorName, #newVendorContact, #newVendorPhone, #newVendorEmail, #newVendorAddress').val('');
+                    Swal.fire('Success', response.message, 'success');
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                Swal.fire('Error', 'Failed to add vendor', 'error');
+            }
+        });
+    }
+</script>
+@endpush
+@endsection
