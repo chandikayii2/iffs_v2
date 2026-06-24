@@ -156,14 +156,21 @@ class TireIssueController extends Controller
         return view('tire.issue.show', compact('issueNote'));
     }
 
-    public function edit($id)
-    {
-        $issueNote = TireIssueNote::with(['items.tire', 'items.vehicle'])->findOrFail($id);
-        $vehicles = Vehicle::where('status', 'active')->get();
-        $tires = Tire::whereIn('status', ['new', 'used', 'in_use'])->get();
-        
-        return view('tire.issue.edit', compact('issueNote', 'vehicles', 'tires'));
-    }
+public function edit($id)
+{
+    $issueNote = TireIssueNote::with(['items.tire', 'items.vehicle'])->findOrFail($id);
+    $vehicles = Vehicle::where('status', 'active')->get();
+    
+    // Get currently selected tire IDs from the issue note
+    $selectedTireIds = $issueNote->items->pluck('tire_id')->toArray();
+    
+    // Get available tires: new, used, and also the currently selected ones (even if in_use)
+    $tires = Tire::whereIn('status', ['new', 'used'])
+        ->orWhereIn('id', $selectedTireIds)
+        ->get();
+    
+    return view('tire.issue.edit', compact('issueNote', 'vehicles', 'tires'));
+}
 
     public function update(Request $request, $id)
     {

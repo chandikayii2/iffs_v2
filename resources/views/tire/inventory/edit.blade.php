@@ -22,7 +22,7 @@
         <h5 class="mb-0">Edit Tire Information</h5>
     </div>
     <div class="card-body">
-        <form action="{{ route('tire.inventory.update', $tire->id) }}" method="POST">
+        <form action="{{ route('tire.inventory.update', $tire->id) }}" method="POST" id="editTireForm">
             @csrf
             @method('PUT')
             <div class="row">
@@ -53,8 +53,8 @@
                 <div class="col-lg-4 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                        <label>Brand *</label>
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                            <label>Brand *</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBrandModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -65,15 +65,14 @@
                                     <option value="{{ $brand }}" {{ $tire->brand == $brand ? 'selected' : '' }}>{{ $brand }}</option>
                                 @endforeach
                             </select>
-                            
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                        <label>Size *</label>
-                         <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSizeModal">
+                            <label>Size *</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSizeModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -84,15 +83,14 @@
                                     <option value="{{ $size }}" {{ $tire->size == $size ? 'selected' : '' }}>{{ $size }}</option>
                                 @endforeach
                             </select>
-                           
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                        <label>Type *</label>
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+                            <label>Type *</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -103,15 +101,14 @@
                                     <option value="{{ $type }}" {{ $tire->type == $type ? 'selected' : '' }}>{{ $type }}</option>
                                 @endforeach
                             </select>
-                            
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                        <label>Vendor/Supplier</label>
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVendorModal">
+                            <label>Vendor/Supplier</label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVendorModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -124,7 +121,6 @@
                                     </option>
                                 @endforeach
                             </select>
-                            
                         </div>
                         <small class="text-muted">The vendor/supplier of this tire</small>
                     </div>
@@ -132,7 +128,18 @@
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
                         <label>Max Refills</label>
-                        <input type="number" name="max_refills" class="form-control" value="{{ $tire->max_refills }}" min="0" max="10">
+                        <input type="number" name="max_refills" id="max_refills" class="form-control" 
+                               value="{{ $tire->max_refills }}" min="{{ $tire->refill_count }}" max="10">
+                        <small class="text-muted">
+                            Current refill count: <strong>{{ $tire->refill_count }}</strong> 
+                            (Max refills cannot be less than current refill count)
+                        </small>
+                        @if($tire->refill_count > 0)
+                            <div class="text-warning small">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                Minimum allowed: {{ $tire->refill_count }} (already refilled {{ $tire->refill_count }} times)
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="col-lg-6 col-sm-12">
@@ -145,7 +152,7 @@
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
                         <label>Purchase Price</label>
-                        <p>${{ number_format($tire->purchase_price, 2) }}</p>
+                        <p>Rs.{{ number_format($tire->purchase_price, 2) }}</p>
                         <small class="text-muted">Purchase price cannot be changed</small>
                     </div>
                 </div>
@@ -164,7 +171,7 @@
                 </div>
             </div>
             <div class="text-end mt-3">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
                     <i class="fas fa-save me-1"></i> Update Tire
                 </button>
                 <a href="{{ route('tire.inventory.index') }}" class="btn btn-secondary">
@@ -275,11 +282,46 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
+        // Initialize Select2 with proper placeholder
         $('#brandSelect, #sizeSelect, #typeSelect, #vendorSelect').select2({
             tags: true,
             placeholder: "Select or type new",
             allowClear: true,
             width: '100%'
+        });
+
+        // Validate max_refills on form submit
+        $('#editTireForm').on('submit', function(e) {
+            var maxRefills = parseInt($('#max_refills').val());
+            var currentRefillCount = {{ $tire->refill_count }};
+            
+            if (maxRefills < currentRefillCount) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Invalid Max Refills',
+                    text: 'Max refills cannot be less than current refill count (' + currentRefillCount + '). Please set a value of ' + currentRefillCount + ' or higher.',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'OK'
+                });
+                $('#max_refills').focus();
+                return false;
+            }
+            return true;
+        });
+
+        // Real-time validation on max_refills input
+        $('#max_refills').on('change keyup', function() {
+            var value = parseInt($(this).val());
+            var currentRefillCount = {{ $tire->refill_count }};
+            
+            if (value < currentRefillCount) {
+                $(this).addClass('is-invalid');
+                $(this).next('small').html('<span class="text-danger">Max refills cannot be less than ' + currentRefillCount + ' (current refill count)</span>');
+            } else {
+                $(this).removeClass('is-invalid');
+                $(this).next('small').html('Current refill count: <strong>{{ $tire->refill_count }}</strong> (Max refills cannot be less than current refill count)');
+            }
         });
     });
     
@@ -327,11 +369,21 @@
             return;
         }
         
+        Swal.fire({
+            title: 'Adding Vendor...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
         $.ajax({
             url: '{{ route("tire.refilling.vendors.store") }}',
             type: 'POST',
             data: vendorData,
             success: function(response) {
+                Swal.close();
                 if (response.success) {
                     var newOption = new Option(response.vendor_display, response.vendor_id, true, true);
                     $('#vendorSelect').append(newOption).trigger('change');
@@ -343,7 +395,12 @@
                 }
             },
             error: function(xhr) {
-                Swal.fire('Error', 'Failed to add vendor', 'error');
+                Swal.close();
+                let errorMsg = 'Failed to add vendor';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                Swal.fire('Error', errorMsg, 'error');
             }
         });
     }

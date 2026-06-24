@@ -55,10 +55,11 @@
                     <tbody id="editTableBody">
                         @foreach($issueNote->items as $index => $item)
                         <tr id="row-{{ $index }}">
-                            <td>{{ $index + 1 }}</td>
+                            <td class="row-number">{{ $index + 1 }}</td>
                             <td>
                                 <input type="hidden" name="item_ids[]" value="{{ $item->id }}">
                                 <select name="tire_ids[]" class="form-control form-control-sm tire-select" required>
+                                    <option value="">Select Tire</option>
                                     @foreach($tires as $tire)
                                         <option value="{{ $tire->id }}" {{ $item->tire_id == $tire->id ? 'selected' : '' }}>
                                             {{ $tire->serial_number }} ({{ $tire->status }})
@@ -78,7 +79,7 @@
                             </td>
                             <td>
                                 <input type="number" name="consumed_mileages[]" class="form-control form-control-sm" 
-                                       value="{{ $item->consumed_mileage }}" min="0" required>
+                                       value="{{ $item->consumed_mileage }}" min="0" readonly>
                             </td>
                             <td>
                                 <input type="text" name="remarks[]" class="form-control form-control-sm" 
@@ -117,15 +118,42 @@
     </div>
 </form>
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 38px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 36px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    input[readonly] {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+    }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    var rowCount = {{ $issueNote->items->count() }};
+    // Get initial row count
+    var rowCount = $('#editTableBody tr').length;
+    
     var allTires = @json($tires);
     var allVehicles = @json($vehicles);
 
-    // Initialize Select2
+    // Initialize Select2 for existing rows
     $('.tire-select, .vehicle-select').select2({
         placeholder: "Select...",
         allowClear: true,
@@ -134,9 +162,13 @@ $(document).ready(function() {
 
     // Add new row
     $('#add-row-btn').click(function() {
+        // Only show available tires (new, used - not in_use)
         var tireOptions = '<option value="">Select Tire</option>';
         allTires.forEach(function(t) {
-            tireOptions += `<option value="${t.id}">${t.serial_number} (${t.status})</option>`;
+            // Exclude tires that are 'in_use'
+            if (t.status !== 'in_use') {
+                tireOptions += `<option value="${t.id}">${t.serial_number} (${t.status})</option>`;
+            }
         });
 
         var vehicleOptions = '<option value="">Select Vehicle</option>';
@@ -144,9 +176,10 @@ $(document).ready(function() {
             vehicleOptions += `<option value="${v.id}">${v.lorry_number}</option>`;
         });
 
+        var newIndex = rowCount;
         var row = `
-            <tr id="row-${rowCount}">
-                <td>${rowCount + 1}</td>
+            <tr id="row-${newIndex}">
+                <td class="row-number">${newIndex + 1}</td>
                 <td>
                     <select name="tire_ids[]" class="form-control form-control-sm tire-select" required>
                         ${tireOptions}
@@ -158,13 +191,13 @@ $(document).ready(function() {
                     </select>
                 </td>
                 <td>
-                    <input type="number" name="consumed_mileages[]" class="form-control form-control-sm" value="0" min="0" required>
+                    <input type="number" name="consumed_mileages[]" class="form-control form-control-sm" value="0" min="0" readonly>
                 </td>
                 <td>
                     <input type="text" name="remarks[]" class="form-control form-control-sm" placeholder="Enter remark...">
                 </td>
                 <td>
-                    <button type="button" class="btn btn-danger btn-sm remove-row" data-index="${rowCount}">
+                    <button type="button" class="btn btn-danger btn-sm remove-row" data-index="${newIndex}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -173,26 +206,83 @@ $(document).ready(function() {
         $('#editTableBody').append(row);
         
         // Initialize Select2 for new row
-        $(`#row-${rowCount} .tire-select, #row-${rowCount} .vehicle-select`).select2({
+        $(`#row-${newIndex} .tire-select, #row-${newIndex} .vehicle-select`).select2({
             placeholder: "Select...",
             allowClear: true,
             width: '100%'
         });
         
+        // Update row numbers
+        updateRowNumbers();
         rowCount++;
     });
 
     // Remove row
     $(document).on('click', '.remove-row', function() {
         var index = $(this).data('index');
-        $(`#row-${index}`).remove();
+        var row = $(`#row-${index}`);
+        
+        // Check if this row has an item_id (existing record)
+        var hasItemId = row.find('input[name="item_ids[]"]').length > 0 && row.find('input[name="item_ids[]"]').val() != '';
+        
+        Swal.fire({
+            title: 'Remove Tire',
+            text: hasItemId ? 'This tire will be removed from the issue note. Are you sure?' : 'Are you sure you want to remove this tire?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(`#row-${index}`).remove();
+                updateRowNumbers();
+                Swal.fire('Removed', 'Tire removed from list', 'success');
+            }
+        });
     });
+
+    // Update row numbers
+    function updateRowNumbers() {
+        $('#editTableBody tr').each(function(idx, row) {
+            $(row).find('.row-number').text(idx + 1);
+            $(row).attr('id', `row-${idx}`);
+            $(row).find('.remove-row').data('index', idx);
+        });
+    }
 
     // Update
     $('#update-btn').click(function() {
+        // Collect all form data
         var formData = $('#editIssueForm').serialize();
         formData += '&_token={{ csrf_token() }}';
         formData += '&_method=PUT';
+
+        // Validate: Check if all rows have vehicle selected
+        var hasMissingVehicle = false;
+        $('#editTableBody select[name="vehicle_ids[]"]').each(function() {
+            if (!$(this).val()) {
+                hasMissingVehicle = true;
+            }
+        });
+
+        if (hasMissingVehicle) {
+            Swal.fire('Error', 'Please select a vehicle for all tires', 'error');
+            return;
+        }
+
+        // Validate: Check if all rows have tire selected
+        var hasMissingTire = false;
+        $('#editTableBody select[name="tire_ids[]"]').each(function() {
+            if (!$(this).val()) {
+                hasMissingTire = true;
+            }
+        });
+
+        if (hasMissingTire) {
+            Swal.fire('Error', 'Please select a tire for all rows', 'error');
+            return;
+        }
 
         Swal.fire({
             title: 'Confirmation',

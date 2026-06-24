@@ -12,11 +12,28 @@ use Illuminate\Support\Facades\DB;
 
 class RefillingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = RefillingOrder::with(['vendor', 'tires'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = RefillingOrder::with(['vendor', 'tires']);
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('order_number', 'LIKE', "%{$search}%")
+                  ->orWhere('status', 'LIKE', "%{$search}%")
+                  ->orWhereHas('vendor', function($vendorQuery) use ($search) {
+                      $vendorQuery->where('name', 'LIKE', "%{$search}%")
+                                  ->orWhere('contact_person', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('tires', function($tireQuery) use ($search) {
+                      $tireQuery->where('serial_number', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->paginate(15);
+        $orders->appends(['search' => $request->search]);
 
         return view('tire.refilling.index', compact('orders'));
     }
@@ -161,6 +178,17 @@ class RefillingController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to process receipt: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate PDF for Refilling Order
+     */
+    public function generatePdf($orderId)
+    {
+        $order = RefillingOrder::with(['vendor', 'tires'])
+            ->findOrFail($orderId);
+        
+        return view('tire.refilling.pdf', compact('order'));
     }
 
     // ============================================

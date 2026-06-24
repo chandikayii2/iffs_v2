@@ -77,7 +77,7 @@
                         <td>{{ $tire->serial_number }}</td>
                         <td>{{ $tire->brand }}</td>
                         <td>{{ $tire->size }}</td>
-                        <td>${{ number_format($tire->pivot->refilling_cost ?? 0, 2) }}</td>
+                        <td>Rs.{{ number_format($tire->pivot->refilling_cost ?? 0, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>

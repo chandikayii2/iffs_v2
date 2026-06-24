@@ -52,6 +52,11 @@
         color: #C0392B;
     }
     
+    .location-refilling {
+        background: rgba(155, 89, 182, 0.15);
+        color: #8E44AD;
+    }
+    
     .action-btn-edit {
         color: #F39C12;
     }
@@ -80,6 +85,107 @@
         background: rgba(52, 152, 219, 0.1);
         color: #2980B9;
     }
+    
+    .search-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .search-container .search-input {
+        flex: 1;
+        position: relative;
+    }
+    
+    .search-container .search-input input {
+        width: 100%;
+        padding: 10px 45px 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    
+    .search-container .search-input input:focus {
+        border-color: #2ECC71;
+        box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        outline: none;
+    }
+    
+    .search-container .search-input .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #95a5a6;
+    }
+    
+    .search-container .search-input .clear-search {
+        position: absolute;
+        right: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #e74c3c;
+        cursor: pointer;
+        display: none;
+        background: none;
+        border: none;
+        font-size: 16px;
+    }
+    
+    .search-container .search-input .clear-search.show {
+        display: block;
+    }
+    
+    .search-container .btn-search {
+        background: #1b2850;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+    
+    .search-container .btn-search:hover {
+        background: #2a3d7a;
+    }
+    
+    .search-container .btn-reset {
+        background: #95a5a6;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+    
+    .search-container .btn-reset:hover {
+        background: #7f8c8d;
+    }
+    
+    .search-info {
+        color: #7f8c8d;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .search-container {
+            flex-direction: column;
+        }
+        .search-container .search-input {
+            width: 100%;
+        }
+        .search-container .btn-search,
+        .search-container .btn-reset {
+            width: 100%;
+        }
+    }
 </style>
 
 @section('content')
@@ -90,7 +196,7 @@
     </div>
     <div class="page-btn">
         <a href="{{ route('tire.inventory.create') }}" class="btn btn-added">
-            <i class="fas fa-plus-circle"></i> Add New Tire
+            <i class="fas fa-plus-circle" style="margin-right: 10px;"></i>Add New Tire
         </a>
     </div>
 </div>
@@ -133,7 +239,7 @@
         <div class="dash-count das3">
             <div class="dash-counts">
                 <h4>{{ $stats['at_vendor'] }}</h4>
-                <h5>Refill</h5>
+                <h5>Refilling</h5>
             </div>
             <div class="dash-imgs">
                 <i class="fas fa-truck"></i>
@@ -161,6 +267,29 @@
                 <p class="card-text">Complete list of all tires with their current status</p>
             </div>
             <div class="card-body">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <div class="search-input">
+                        <input type="text" id="searchInput" placeholder="Search by Serial No, Brand, Vendor, Size, Type, Location, Vehicle No..." value="{{ request('search') }}">
+                        <button class="clear-search" id="clearSearch" onclick="clearSearch()">✕</button>
+                        <span class="search-icon"><i class="fas fa-search"></i></span>
+                    </div>
+                    <button class="btn-search" onclick="performSearch()">
+                        <i class="fas fa-search" style="margin-right: 8px;"></i> Search
+                    </button>
+                    <a href="{{ route('tire.inventory.index') }}" class="btn-reset">
+                        <i class="fas fa-undo" style="margin-right: 8px;"></i> Reset
+                    </a>
+                </div>
+
+                @if(request('search'))
+                    <div class="search-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Showing results for: <strong>"{{ request('search') }}"</strong>
+                        ({{ $tires->total() }} results found)
+                    </div>
+                @endif
+
                 <div class="table-responsive">
                     <table class="table table-hover datatable">
                         <thead>
@@ -178,7 +307,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($tires as $tire)
+                            @forelse($tires as $tire)
                             <tr>
                                 <td>
                                     <a href="{{ route('tire.inventory.show', $tire->id) }}" class="text-primary fw-bold">
@@ -219,59 +348,58 @@
                                         {{ number_format($tire->consumption_mileage) }} km
                                     </span>
                                 </td>
-                                <!-- resources/views/tire/inventory/index.blade.php - Location column section -->
-<td>
-    @php
-        $locationIcon = 'fa-map-marker-alt';
-        $locationText = '';
-        $locationClass = 'location-store';
-        
-        if($tire->status == 'in_use') {
-            $locationIcon = 'fa-truck';
-            $locationClass = 'location-vehicle';
-            
-            // Try to get vehicle from currentAllocation
-            $vehicle = null;
-            if($tire->currentAllocation && $tire->currentAllocation->vehicle) {
-                $vehicle = $tire->currentAllocation->vehicle;
-            } else {
-                // Try to get from allocations directly
-                $allocation = $tire->allocations()->whereNull('removal_date')->with('vehicle')->first();
-                if($allocation && $allocation->vehicle) {
-                    $vehicle = $allocation->vehicle;
-                }
-            }
-            
-            if($vehicle) {
-                $locationText = 'Vehicle: ' . $vehicle->lorry_number;
-            } else {
-                $locationText = 'In Use';
-            }
-        } elseif($tire->status == 'at_vendor') {
-            $locationIcon = 'fa-store';
-            $locationClass = 'location-vendor';
-            $locationText = 'At Vendor';
-        } elseif($tire->status == 'scrap') {
-            $locationIcon = 'fa-trash';
-            $locationClass = 'location-scrap';
-            $locationText = 'Scrap Yard';
-        } elseif($tire->status == 'used') {
-            $locationIcon = 'fa-warehouse';
-            $locationClass = 'location-store';
-            $locationText = 'In Store';
-        } elseif($tire->status == 'new') {
-            $locationIcon = 'fa-box';
-            $locationClass = 'location-store';
-            $locationText = 'New Stock';
-        } else {
-            $locationText = ucfirst(str_replace('_', ' ', $tire->current_location ?? 'Unknown'));
-        }
-    @endphp
-    <span class="location-badge {{ $locationClass }}">
-        <i class="fas {{ $locationIcon }}"></i>
-        {{ $locationText }}
-    </span>
-</td>
+                                <td>
+                                    @php
+                                        $locationIcon = 'fa-map-marker-alt';
+                                        $locationText = '';
+                                        $locationClass = 'location-store';
+                                        
+                                        if($tire->status == 'in_use') {
+                                            $locationIcon = 'fa-truck';
+                                            $locationClass = 'location-vehicle';
+                                            
+                                            // Try to get vehicle from currentAllocation
+                                            $vehicle = null;
+                                            if($tire->currentAllocation && $tire->currentAllocation->vehicle) {
+                                                $vehicle = $tire->currentAllocation->vehicle;
+                                            } else {
+                                                // Try to get from allocations directly
+                                                $allocation = $tire->allocations()->whereNull('removal_date')->with('vehicle')->first();
+                                                if($allocation && $allocation->vehicle) {
+                                                    $vehicle = $allocation->vehicle;
+                                                }
+                                            }
+                                            
+                                            if($vehicle) {
+                                                $locationText = 'Vehicle: ' . $vehicle->lorry_number;
+                                            } else {
+                                                $locationText = 'In Use';
+                                            }
+                                        } elseif($tire->status == 'at_vendor') {
+                                            $locationIcon = 'fa-sync-alt';
+                                            $locationClass = 'location-refilling';
+                                            $locationText = 'Refilling';
+                                        } elseif($tire->status == 'scrap') {
+                                            $locationIcon = 'fa-trash';
+                                            $locationClass = 'location-scrap';
+                                            $locationText = 'Scrap Yard';
+                                        } elseif($tire->status == 'used') {
+                                            $locationIcon = 'fa-warehouse';
+                                            $locationClass = 'location-store';
+                                            $locationText = 'In Store';
+                                        } elseif($tire->status == 'new') {
+                                            $locationIcon = 'fa-box';
+                                            $locationClass = 'location-store';
+                                            $locationText = 'New Stock';
+                                        } else {
+                                            $locationText = ucfirst(str_replace('_', ' ', $tire->current_location ?? 'Unknown'));
+                                        }
+                                    @endphp
+                                    <span class="location-badge {{ $locationClass }}">
+                                        <i class="fas {{ $locationIcon }}"></i>
+                                        {{ $locationText }}
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="action-buttons">
                                         <!-- View Button -->
@@ -300,7 +428,14 @@
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="10" class="text-center py-4">
+                                    <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">No tires found matching your search criteria.</p>
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -365,6 +500,47 @@
             }
         });
     }
+
+    // Search functionality
+    function performSearch() {
+        var searchValue = document.getElementById('searchInput').value.trim();
+        if (searchValue) {
+            window.location.href = '{{ route("tire.inventory.index") }}?search=' + encodeURIComponent(searchValue);
+        } else {
+            window.location.href = '{{ route("tire.inventory.index") }}';
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('clearSearch').classList.remove('show');
+        window.location.href = '{{ route("tire.inventory.index") }}';
+    }
+
+    // Show/hide clear button based on input
+    document.addEventListener('DOMContentLoaded', function() {
+        var searchInput = document.getElementById('searchInput');
+        var clearBtn = document.getElementById('clearSearch');
+        
+        if (searchInput.value.length > 0) {
+            clearBtn.classList.add('show');
+        }
+        
+        searchInput.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                clearBtn.classList.add('show');
+            } else {
+                clearBtn.classList.remove('show');
+            }
+        });
+
+        // Enter key to search
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    });
 </script>
 @endpush
 @endsection

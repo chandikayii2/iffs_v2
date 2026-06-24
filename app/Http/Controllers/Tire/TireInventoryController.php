@@ -13,11 +13,35 @@ use App\Models\Vehicle;
 
 class TireInventoryController extends Controller
 {
-    public function index()
+public function index(Request $request)
     {
-        $tires = Tire::with(['currentAllocation.vehicle', 'scrapRecord', 'vendor'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = Tire::with(['currentAllocation.vehicle', 'scrapRecord', 'vendor']);
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('serial_number', 'LIKE', "%{$search}%")
+                  ->orWhere('brand', 'LIKE', "%{$search}%")
+                  ->orWhere('size', 'LIKE', "%{$search}%")
+                  ->orWhere('type', 'LIKE', "%{$search}%")
+                  ->orWhere('current_location', 'LIKE', "%{$search}%")
+                  ->orWhereHas('vendor', function($vendorQuery) use ($search) {
+                      $vendorQuery->where('name', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('currentAllocation.vehicle', function($vehicleQuery) use ($search) {
+                      $vehicleQuery->where('lorry_number', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('allocations', function($allocationQuery) use ($search) {
+                      $allocationQuery->whereNull('removal_date')
+                          ->whereHas('vehicle', function($vehicleQuery) use ($search) {
+                              $vehicleQuery->where('lorry_number', 'LIKE', "%{$search}%");
+                          });
+                  });
+            });
+        }
+
+        $tires = $query->orderBy('created_at', 'desc')->paginate(20);
         
         $stats = [
             'new' => Tire::where('status', 'new')->count(),
@@ -26,6 +50,9 @@ class TireInventoryController extends Controller
             'at_vendor' => Tire::where('status', 'at_vendor')->count(),
             'scrap' => Tire::where('status', 'scrap')->count(),
         ];
+
+        // Keep search query in pagination
+        $tires->appends(['search' => $request->search]);
 
         return view('tire.inventory.index', compact('tires', 'stats'));
     }
@@ -119,39 +146,40 @@ class TireInventoryController extends Controller
         return view('tire.inventory.edit', compact('tire', 'brands', 'sizes', 'types', 'vendors'));
     }
 
-    public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'brand' => 'required|string',
-            'size' => 'required|string',
-            'type' => 'required|string',
-            'max_refills' => 'required|integer|min:0',
-            'notes' => 'nullable|string',
-            'vendor_id' => 'nullable|exists:refilling_vendors,id'
+public function update(Request $request, $id)
+{
+    $tire = Tire::findOrFail($id);
+    
+    $validator = Validator::make($request->all(), [
+        'brand' => 'required|string',
+        'size' => 'required|string',
+        'type' => 'required|string',
+        'max_refills' => 'required|integer|min:' . $tire->refill_count . '|max:10',
+        'notes' => 'nullable|string',
+        'vendor_id' => 'nullable|exists:refilling_vendors,id'
+    ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()->withErrors($validator)->withInput();
+    }
+
+    try {
+        $tire->update([
+            'brand' => $request->brand,
+            'size' => $request->size,
+            'type' => $request->type,
+            'max_refills' => $request->max_refills,
+            'notes' => $request->notes,
+            'vendor_id' => $request->vendor_id
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        return redirect()->route('tire.inventory.show', $id)
+            ->with('success', 'Tire updated successfully!');
 
-        try {
-            $tire = Tire::findOrFail($id);
-            $tire->update([
-                'brand' => $request->brand,
-                'size' => $request->size,
-                'type' => $request->type,
-                'max_refills' => $request->max_refills,
-                'notes' => $request->notes,
-                'vendor_id' => $request->vendor_id
-            ]);
-
-            return redirect()->route('tire.inventory.show', $id)
-                ->with('success', 'Tire updated successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update tire: ' . $e->getMessage());
-        }
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Failed to update tire: ' . $e->getMessage());
     }
+}
 
     public function delete($id)
     {

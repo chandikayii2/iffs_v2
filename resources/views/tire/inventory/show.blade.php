@@ -114,7 +114,7 @@
                 <div class="form-group row">
                     <label class="col-lg-4 col-form-label">Purchase Price:</label>
                     <div class="col-lg-8">
-                        <p>${{ number_format($tire->purchase_price, 2) }}</p>
+                        <p>Rs.{{ number_format($tire->purchase_price, 2) }}</p>
                     </div>
                 </div>
             </div>

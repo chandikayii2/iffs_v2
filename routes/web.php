@@ -235,6 +235,7 @@ Route::prefix('refilling')->group(function () {
     Route::put('/update/{orderId}', [RefillingController::class, 'updateOrder'])->name('tire.refilling.update');
     Route::delete('/cancel/{orderId}', [RefillingController::class, 'cancelOrder'])->name('tire.refilling.cancel');
     Route::get('/{orderId}/pdf', [RefillingController::class, 'generatePdf'])->name('tire.refilling.pdf');
+
     
     // Vendor Management - FIXED ROUTES
     Route::prefix('vendors')->group(function () {

@@ -23,29 +23,96 @@
             @csrf
             
             <div class="row">
-                <!-- Serial Number & Quantity Row -->
-                <div class="col-md-6 mb-3">
-                    <div class="form-group">
-                        <label class="form-label fw-bold">Serial Number <span class="text-danger">*</span></label>
-                        <input type="text" name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" 
-                               placeholder="e.g., TIR-2024-001" value="{{ old('serial_number') }}" required>
-                        <small class="text-muted">Unique identifier for the tire</small>
-                        @error('serial_number')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                
-                <div class="col-md-6 mb-3">
+                <!-- Serial Number & Brand, Size, Type Row -->
+<div class="row">
+    <!-- Serial Number -->
+    <div class="col-md-6 mb-3">
+        <div class="form-group">
+            <label class="form-label fw-bold">Serial Number <span class="text-danger">*</span></label>
+            <input type="text" name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" 
+                   placeholder="e.g., TIR-2024-001" value="{{ old('serial_number') }}" required>
+            <small class="text-muted">Unique identifier for the tire</small>
+            @error('serial_number')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
+    
+    <!-- Brand -->
+    <div class="col-md-2 mb-3">
+        <div class="form-group">
+            <div class="d-flex">
+                <label class="form-label fw-bold">Brand <span class="text-danger">*</span></label>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBrandModal" title="Add New Brand" style="margin-left: 5px;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <select name="brand" class="form-control select2 @error('brand') is-invalid @enderror" id="brandSelect" required>
+                <option value="">-- Select or type brand --</option>
+                @foreach($brands as $brand)
+                    <option value="{{ $brand }}" {{ old('brand') == $brand ? 'selected' : '' }}>{{ $brand }}</option>
+                @endforeach
+            </select>
+            @error('brand')
+                <div class="text-danger small">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
+    
+    <!-- Size -->
+    <div class="col-md-2 mb-3">
+        <div class="form-group">
+            <div class="d-flex">
+                <label class="form-label fw-bold">Size <span class="text-danger">*</span></label>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSizeModal" title="Add New Size" style="margin-left: 5px;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <select name="size" class="form-control select2 @error('size') is-invalid @enderror" id="sizeSelect" required>
+                <option value="">-- Select or type size --</option>
+                @foreach($sizes as $size)
+                    <option value="{{ $size }}" {{ old('size') == $size ? 'selected' : '' }}>{{ $size }}</option>
+                @endforeach
+            </select>
+            @error('size')
+                <div class="text-danger small">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
+    
+    <!-- Type -->
+    <div class="col-md-2 mb-3">
+        <div class="form-group">
+            <div class="d-flex">
+                <label class="form-label fw-bold">Type <span class="text-danger">*</span></label>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal" title="Add New Type" style="margin-left: 5px;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <select name="type" class="form-control select2 @error('type') is-invalid @enderror" id="typeSelect" required>
+                <option value="">-- Select or type type --</option>
+                @foreach($types as $type)
+                    <option value="{{ $type }}" {{ old('type') == $type ? 'selected' : '' }}>{{ $type }}</option>
+                @endforeach
+            </select>
+            @error('type')
+                <div class="text-danger small">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
+</div>
+                <!-- <div class="col-md-6 mb-3">
                     <div class="form-group">
                         <label class="form-label fw-bold">Quantity</label>
                         <input type="number" name="quantity" class="form-control" value="1" min="1">
                         <small class="text-muted">For multiple identical tires</small>
                     </div>
-                </div>
+                </div> -->
+                <!-- Hidden Quantity Field - Always 1 -->
+                <input type="hidden" name="quantity" value="1">
 
                 <!-- Brand, Size, Type Row -->
-                <div class="col-md-4 mb-3">
+                <!-- <div class="col-md-4 mb-3">
                     <div class="form-group">
                         <div class="d-flex">
                             <label class="form-label fw-bold">Brand <span class="text-danger">*</span></label>
@@ -63,9 +130,9 @@
                             <div class="text-danger small">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
+                </div> -->
                 
-                <div class="col-md-4 mb-3">
+                <!-- <div class="col-md-4 mb-3">
                     <div class="form-group">
                         <div class="d-flex">
                             <label class="form-label fw-bold">Size <span class="text-danger">*</span></label>
@@ -83,9 +150,9 @@
                             <div class="text-danger small">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
+                </div> -->
                 
-                <div class="col-md-4 mb-3">
+                <!-- <div class="col-md-4 mb-3">
                     <div class="form-group">
                         <div class="d-flex">
                             <label class="form-label fw-bold">Type <span class="text-danger">*</span></label>
@@ -103,7 +170,7 @@
                             <div class="text-danger small">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Vendor Selection -->
                 <div class="col-md-6 mb-3">

@@ -200,116 +200,110 @@ $(document).ready(function() {
         }
     });
 
-    // Add tire to table
-    $('#add-tire-btn').click(function() {
-        var tireId = $('#tire_serial').val();
-        var tireSerial = $('#tire_serial option:selected').text().trim();
-        var consumedMileage = $('#consumed_mileage').val();
-        var brand = $('#tire_brand').val();
-        var size = $('#tire_size').val();
-        var type = $('#tire_type').val();
+// Add tire to table
+$('#add-tire-btn').click(function() {
+    var tireId = $('#tire_serial').val();
+    var tireSerial = $('#tire_serial option:selected').text().trim();
+    var consumedMileage = $('#consumed_mileage').val();
+    var brand = $('#tire_brand').val();
+    var size = $('#tire_size').val();
+    var type = $('#tire_type').val();
 
-        // Validate
-        if (!tireId) {
-            Swal.fire('Error', 'Please select a tire', 'error');
-            return;
-        }
+    // Validate
+    if (!tireId) {
+        Swal.fire('Error', 'Please select a tire', 'error');
+        return;
+    }
 
-        if (!brand || !size || !type) {
-            Swal.fire('Error', 'Please wait for tire data to load', 'error');
-            return;
-        }
+    if (!brand || !size || !type) {
+        Swal.fire('Error', 'Please wait for tire data to load', 'error');
+        return;
+    }
 
-        // Check if tire already added
-        if (addedTires.some(item => item.tireId == tireId)) {
-            Swal.fire('Error', 'This tire is already added to the list', 'error');
-            return;
-        }
+    // Check if tire already added
+    if (addedTires.some(item => item.tireId == tireId)) {
+        Swal.fire('Error', 'This tire is already added to the list', 'error');
+        return;
+    }
 
-        // Add to array with default values
-        addedTires.push({
-            tireId: tireId,
-            tireSerial: tireSerial,
-            consumedMileage: consumedMileage || 0,
-            brand: brand,
-            size: size,
-            type: type,
-            vehicleId: '',
-            vehicleNo: '',
-            remark: ''
-        });
-
-        // Add row to table
-        addRowToTable(addedTires.length - 1);
-
-        // Clear fields
-        $('#tire_serial').val('').trigger('change');
-        $('#tire_brand, #tire_size, #tire_type, #consumed_mileage').val('');
+    // Add to array with default values
+    addedTires.push({
+        tireId: tireId,
+        tireSerial: tireSerial,
+        consumedMileage: consumedMileage || 0,
+        brand: brand,
+        size: size,
+        type: type,
+        vehicleId: '',
+        vehicleNo: '',
+        remark: ''
     });
 
-    function addRowToTable(index) {
-        var tire = addedTires[index];
-        
-        // Build vehicle options
-        var vehicleOptions = '<option value="">Select Vehicle</option>';
-        vehicles.forEach(function(v) {
-            vehicleOptions += `<option value="${v.id}">${v.lorry_number}</option>`;
-        });
-        
-        var row = `
-            <tr id="row-${index}">
-                <td><strong>${tire.tireSerial}</strong></td>
-                <td>
-                    <select class="form-control form-control-sm vehicle-select" data-index="${index}" style="min-width: 140px;">
-                        ${vehicleOptions}
-                    </select>
-                </td>
-                <td>
-                    <input type="number" class="form-control form-control-sm mileage-input" 
-                           data-index="${index}" value="${tire.consumedMileage}" min="0" style="width: 120px;">
-                </td>
-                <td>${tire.size}</td>
-                <td>${tire.brand}</td>
-                <td>
-                    <input type="text" class="form-control form-control-sm item-remark" 
-                           data-index="${index}" placeholder="Enter remark..." style="min-width: 150px;">
-                </td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm remove-tire" data-index="${index}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        $('#tireTableBody').append(row);
+    // Add row to table
+    addRowToTable(addedTires.length - 1);
 
-        // Initialize Select2 for vehicle dropdown in row
-        $(`#row-${index} .vehicle-select`).select2({
-            placeholder: "Select Vehicle",
-            allowClear: true,
-            width: '100%'
-        });
+    // Clear fields
+    $('#tire_serial').val('').trigger('change');
+    $('#tire_brand, #tire_size, #tire_type, #consumed_mileage').val('');
+});
 
-        // Handle vehicle selection change
-        $(`#row-${index} .vehicle-select`).on('change', function() {
-            var idx = $(this).data('index');
-            var selectedOption = $(this).find('option:selected');
-            addedTires[idx].vehicleId = $(this).val();
-            addedTires[idx].vehicleNo = selectedOption.text();
-        });
+function addRowToTable(index) {
+    var tire = addedTires[index];
+    
+    // Build vehicle options
+    var vehicleOptions = '<option value="">Select Vehicle</option>';
+    vehicles.forEach(function(v) {
+        vehicleOptions += `<option value="${v.id}">${v.lorry_number}</option>`;
+    });
+    
+    var row = `
+        <tr id="row-${index}">
+            <td><strong>${tire.tireSerial}</strong></td>
+            <td>
+                <select class="form-control form-control-sm vehicle-select" data-index="${index}" style="min-width: 140px;">
+                    ${vehicleOptions}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control form-control-sm mileage-input" 
+                       data-index="${index}" value="${tire.consumedMileage}" min="0" style="width: 120px;" readonly>
+            </td>
+            <td>${tire.size}</td>
+            <td>${tire.brand}</td>
+            <td>
+                <input type="text" class="form-control form-control-sm item-remark" 
+                       data-index="${index}" placeholder="Enter remark..." style="min-width: 150px;">
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm remove-tire" data-index="${index}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+    $('#tireTableBody').append(row);
 
-        // Handle mileage change
-        $(`#row-${index} .mileage-input`).on('change', function() {
-            var idx = $(this).data('index');
-            addedTires[idx].consumedMileage = $(this).val() || 0;
-        });
+    // Initialize Select2 for vehicle dropdown in row
+    $(`#row-${index} .vehicle-select`).select2({
+        placeholder: "Select Vehicle",
+        allowClear: true,
+        width: '100%'
+    });
 
-        // Handle remark change
-        $(`#row-${index} .item-remark`).on('change', function() {
-            var idx = $(this).data('index');
-            addedTires[idx].remark = $(this).val();
-        });
-    }
+    // Handle vehicle selection change
+    $(`#row-${index} .vehicle-select`).on('change', function() {
+        var idx = $(this).data('index');
+        var selectedOption = $(this).find('option:selected');
+        addedTires[idx].vehicleId = $(this).val();
+        addedTires[idx].vehicleNo = selectedOption.text();
+    });
+
+    // Handle remark change
+    $(`#row-${index} .item-remark`).on('change', function() {
+        var idx = $(this).data('index');
+        addedTires[idx].remark = $(this).val();
+    });
+}
 
     // Remove tire from table
     $(document).on('click', '.remove-tire', function() {
