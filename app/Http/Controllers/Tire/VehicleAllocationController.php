@@ -26,28 +26,28 @@ class VehicleAllocationController extends Controller
         return view('tire.vehicles.create');
     }
 
-    public function storeVehicle(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'lorry_number' => 'required|unique:vehicles,lorry_number',
-            'status' => 'required|in:active,inactive,maintenance'
-        ]);
+public function storeVehicle(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'lorry_number' => 'required|unique:vehicles,lorry_number',
+        'status' => 'required|in:active,inactive,maintenance'
+    ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        Vehicle::create([
-            'lorry_number' => $request->lorry_number,
-            'status' => $request->status,
-            'driver_name' => null,
-            'driver_contact' => null,
-            'current_mileage' => 0
-        ]);
-
-        return redirect()->route('tire.vehicles.index')
-            ->with('success', 'Vehicle added successfully!');
+    if ($validator->fails()) {
+        return redirect()->back()->withErrors($validator)->withInput();
     }
+
+    Vehicle::create([
+        'lorry_number' => $request->lorry_number,
+        'status' => $request->status,
+        'driver_name' => '', // Empty string instead of null
+        'driver_contact' => '',
+        'current_mileage' => 0
+    ]);
+
+    return redirect()->route('tire.vehicles.index')
+        ->with('success', 'Vehicle added successfully!');
+}
 
     public function editVehicle($vehicleId)
     {
