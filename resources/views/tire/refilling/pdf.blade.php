@@ -389,15 +389,13 @@
                 <tr>
                     <td class="label">Sent Date</td>
                     <td class="value">{{ $order->sent_date->format('d-m-Y') }}</td>
-                    <td class="label">Expected Return</td>
-                    <td class="value">{{ $order->expected_return_date ? $order->expected_return_date->format('d-m-Y') : 'N/A' }}</td>
+                    <td class="label">Received Date</td>
+                    <td class="value">{{ $order->received_date ? $order->received_date->format('d-m-Y') : 'Not Received' }}</td>
                 </tr>
                 @if($order->received_date)
                 <tr>
-                    <td class="label">Received Date</td>
-                    <td class="value">{{ $order->received_date->format('d-m-Y') }}</td>
                     <td class="label">Total Cost</td>
-                    <td class="value"><strong>Rs. {{ number_format($order->total_cost ?? 0, 2) }}</strong></td>
+                    <td class="value" colspan="3"><strong>Rs. {{ number_format($order->total_cost ?? 0, 2) }}</strong></td>
                 </tr>
                 @endif
             </table>
@@ -425,7 +423,9 @@
                         <td>{{ $tire->size }}</td>
                         <td>{{ $tire->type }}</td>
                         <td>
-                            <span class="badge badge-soft-info">{{ $tire->refill_count }} / {{ $tire->max_refills }}</span>
+                            <span style="background: #e8f4fd; padding: 2px 10px; border-radius: 12px; font-size: 12px;">
+                                {{ $tire->refill_count }} / {{ $tire->max_refills }}
+                            </span>
                         </td>
                         <td>Rs. {{ number_format($tire->pivot->refilling_cost ?? 0, 2) }}</td>
                     </tr>

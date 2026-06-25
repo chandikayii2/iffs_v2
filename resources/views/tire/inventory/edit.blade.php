@@ -26,13 +26,21 @@
             @csrf
             @method('PUT')
             <div class="row">
+                <!-- Serial Number - Now Editable -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
-                        <label>Serial Number</label>
-                        <p class="form-control-static"><strong>{{ $tire->serial_number }}</strong></p>
-                        <small class="text-muted">Serial number cannot be changed</small>
+                        <label>Serial Number <span class="text-danger">*</span></label>
+                        <input type="text" name="serial_number" id="serial_number" 
+                               class="form-control @error('serial_number') is-invalid @enderror" 
+                               value="{{ old('serial_number', $tire->serial_number) }}" required>
+                        <small class="text-muted">Unique identifier for the tire</small>
+                        @error('serial_number')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+                
+                <!-- Status - Readonly -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
                         <label>Status</label>
@@ -50,60 +58,71 @@
                         <small class="text-muted">Status changes automatically based on actions</small>
                     </div>
                 </div>
+
+                <!-- Brand -->
                 <div class="col-lg-4 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                            <label>Brand *</label>
+                            <label>Brand <span class="text-danger">*</span></label>
                             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addBrandModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        <div class="input-group">
-                            <select name="brand" class="form-control select2" id="brandSelect" required>
-                                <option value="">Select or type new brand</option>
-                                @foreach($brands ?? [] as $brand)
-                                    <option value="{{ $brand }}" {{ $tire->brand == $brand ? 'selected' : '' }}>{{ $brand }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="brand" class="form-control select2 @error('brand') is-invalid @enderror" id="brandSelect" required>
+                            <option value="">Select or type new brand</option>
+                            @foreach($brands ?? [] as $brand)
+                                <option value="{{ $brand }}" {{ $tire->brand == $brand ? 'selected' : '' }}>{{ $brand }}</option>
+                            @endforeach
+                        </select>
+                        @error('brand')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <!-- Size -->
                 <div class="col-lg-4 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                            <label>Size *</label>
+                            <label>Size <span class="text-danger">*</span></label>
                             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSizeModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        <div class="input-group">
-                            <select name="size" class="form-control select2" id="sizeSelect" required>
-                                <option value="">Select or type new size</option>
-                                @foreach($sizes ?? [] as $size)
-                                    <option value="{{ $size }}" {{ $tire->size == $size ? 'selected' : '' }}>{{ $size }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="size" class="form-control select2 @error('size') is-invalid @enderror" id="sizeSelect" required>
+                            <option value="">Select or type new size</option>
+                            @foreach($sizes ?? [] as $size)
+                                <option value="{{ $size }}" {{ $tire->size == $size ? 'selected' : '' }}>{{ $size }}</option>
+                            @endforeach
+                        </select>
+                        @error('size')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <!-- Type -->
                 <div class="col-lg-4 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
-                            <label>Type *</label>
+                            <label>Type <span class="text-danger">*</span></label>
                             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        <div class="input-group">
-                            <select name="type" class="form-control select2" id="typeSelect" required>
-                                <option value="">Select or type new type</option>
-                                @foreach($types ?? [] as $type)
-                                    <option value="{{ $type }}" {{ $tire->type == $type ? 'selected' : '' }}>{{ $type }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="type" class="form-control select2 @error('type') is-invalid @enderror" id="typeSelect" required>
+                            <option value="">Select or type new type</option>
+                            @foreach($types ?? [] as $type)
+                                <option value="{{ $type }}" {{ $tire->type == $type ? 'selected' : '' }}>{{ $type }}</option>
+                            @endforeach
+                        </select>
+                        @error('type')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <!-- Vendor -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
                         <div class="d-flex">
@@ -112,19 +131,19 @@
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        <div class="input-group">
-                            <select name="vendor_id" class="form-control select2" id="vendorSelect">
-                                <option value="">-- Select Vendor --</option>
-                                @foreach($vendors ?? [] as $vendor)
-                                    <option value="{{ $vendor->id }}" {{ $tire->vendor_id == $vendor->id ? 'selected' : '' }}>
-                                        {{ $vendor->name }} - {{ $vendor->contact_person }} ({{ $vendor->phone }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="vendor_id" class="form-control select2" id="vendorSelect">
+                            <option value="">-- Select Vendor --</option>
+                            @foreach($vendors ?? [] as $vendor)
+                                <option value="{{ $vendor->id }}" {{ $tire->vendor_id == $vendor->id ? 'selected' : '' }}>
+                                    {{ $vendor->name }} - {{ $vendor->contact_person }} ({{ $vendor->phone }})
+                                </option>
+                            @endforeach
+                        </select>
                         <small class="text-muted">The vendor/supplier of this tire</small>
                     </div>
                 </div>
+
+                <!-- Max Refills -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
                         <label>Max Refills</label>
@@ -142,27 +161,51 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- Purchase Date - Now Editable -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
-                        <label>Purchase Date</label>
-                        <p>{{ $tire->purchase_date->format('d-m-Y') }}</p>
-                        <small class="text-muted">Purchase date cannot be changed</small>
+                        <label>Purchase Date <span class="text-danger">*</span></label>
+                        <input type="date" name="purchase_date" id="purchase_date" 
+                               class="form-control @error('purchase_date') is-invalid @enderror" 
+                               value="{{ old('purchase_date', $tire->purchase_date ? $tire->purchase_date->format('Y-m-d') : date('Y-m-d')) }}" required>
+                        @error('purchase_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <!-- Purchase Price - Now Editable -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
-                        <label>Purchase Price</label>
-                        <p>Rs.{{ number_format($tire->purchase_price, 2) }}</p>
-                        <small class="text-muted">Purchase price cannot be changed</small>
+                        <label>Purchase Price <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rs</span>
+                            <input type="number" step="0.01" name="purchase_price" id="purchase_price" 
+                                   class="form-control @error('purchase_price') is-invalid @enderror" 
+                                   value="{{ old('purchase_price', $tire->purchase_price) }}" required>
+                        </div>
+                        @error('purchase_price')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <!-- Consumed Mileage - Now Editable -->
                 <div class="col-lg-12">
                     <div class="form-group">
-                        <label>Consumed Mileage</label>
-                        <p><strong>{{ number_format($tire->consumption_mileage) }} km</strong></p>
+                        <label>Consumed Mileage (km)</label>
+                        <input type="number" name="consumption_mileage" id="consumption_mileage" 
+                               class="form-control @error('consumption_mileage') is-invalid @enderror" 
+                               value="{{ old('consumption_mileage', $tire->consumption_mileage ?? 0) }}" min="0">
                         <small class="text-muted">Total kilometers this tire has traveled</small>
+                        @error('consumption_mileage')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <!-- Notes -->
                 <div class="col-lg-12">
                     <div class="form-group">
                         <label>Notes</label>
@@ -277,6 +320,23 @@
     </div>
 </div>
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 38px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 36px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -293,7 +353,7 @@
         // Validate max_refills on form submit
         $('#editTireForm').on('submit', function(e) {
             var maxRefills = parseInt($('#max_refills').val());
-            var currentRefillCount = {{ $tire->refill_count }};
+            var currentRefillCount = parseInt('{{ $tire->refill_count }}');
             
             if (maxRefills < currentRefillCount) {
                 e.preventDefault();
@@ -313,14 +373,14 @@
         // Real-time validation on max_refills input
         $('#max_refills').on('change keyup', function() {
             var value = parseInt($(this).val());
-            var currentRefillCount = {{ $tire->refill_count }};
+            var currentRefillCount = parseInt('{{ $tire->refill_count }}');
             
             if (value < currentRefillCount) {
                 $(this).addClass('is-invalid');
-                $(this).next('small').html('<span class="text-danger">Max refills cannot be less than ' + currentRefillCount + ' (current refill count)</span>');
+                $(this).siblings('small').html('<span class="text-danger">Max refills cannot be less than ' + currentRefillCount + ' (current refill count)</span>');
             } else {
                 $(this).removeClass('is-invalid');
-                $(this).next('small').html('Current refill count: <strong>{{ $tire->refill_count }}</strong> (Max refills cannot be less than current refill count)');
+                $(this).siblings('small').html('Current refill count: <strong>{{ $tire->refill_count }}</strong> (Max refills cannot be less than current refill count)');
             }
         });
     });
@@ -351,7 +411,7 @@
         $(`#add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`).modal('hide');
         $(`#new${type.charAt(0).toUpperCase() + type.slice(1)}`).val('');
         
-        Swal.fire('Success', `${type} added successfully!`, 'success');
+        Swal.fire('Success', `${type.charAt(0).toUpperCase() + type.slice(1)} added successfully!`, 'success');
     }
     
     function addNewVendor() {

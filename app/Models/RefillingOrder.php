@@ -12,13 +12,12 @@ class RefillingOrder extends Model
     protected $table = 'refilling_orders';
 
     protected $fillable = [
-        'order_number', 'vendor_id', 'sent_date', 'expected_return_date',
+        'order_number', 'vendor_id', 'sent_date',
         'received_date', 'status', 'total_cost', 'notes'
     ];
 
     protected $casts = [
         'sent_date' => 'date',
-        'expected_return_date' => 'date',
         'received_date' => 'date',
         'total_cost' => 'decimal:2'
     ];

@@ -71,7 +71,6 @@ class RefillingController extends Controller
             'order_number' => 'required|unique:refilling_orders,order_number',
             'vendor_id' => 'required|exists:refilling_vendors,id',
             'sent_date' => 'required|date',
-            'expected_return_date' => 'nullable|date|after:sent_date',
             'tire_ids' => 'required|array|min:1',
             'tire_ids.*' => 'exists:tires,id',
             'notes' => 'nullable|string'
@@ -88,7 +87,6 @@ class RefillingController extends Controller
                 'order_number' => $request->order_number,
                 'vendor_id' => $request->vendor_id,
                 'sent_date' => $request->sent_date,
-                'expected_return_date' => $request->expected_return_date,
                 'status' => 'sent',
                 'notes' => $request->notes
             ]);

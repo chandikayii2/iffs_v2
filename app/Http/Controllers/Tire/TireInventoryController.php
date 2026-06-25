@@ -14,48 +14,54 @@ use App\Models\Vehicle;
 class TireInventoryController extends Controller
 {
 public function index(Request $request)
-    {
-        $query = Tire::with(['currentAllocation.vehicle', 'scrapRecord', 'vendor']);
+{
+    $query = Tire::with(['currentAllocation.vehicle', 'scrapRecord', 'vendor']);
 
-        // Search functionality
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('serial_number', 'LIKE', "%{$search}%")
-                  ->orWhere('brand', 'LIKE', "%{$search}%")
-                  ->orWhere('size', 'LIKE', "%{$search}%")
-                  ->orWhere('type', 'LIKE', "%{$search}%")
-                  ->orWhere('current_location', 'LIKE', "%{$search}%")
-                  ->orWhereHas('vendor', function($vendorQuery) use ($search) {
-                      $vendorQuery->where('name', 'LIKE', "%{$search}%");
-                  })
-                  ->orWhereHas('currentAllocation.vehicle', function($vehicleQuery) use ($search) {
-                      $vehicleQuery->where('lorry_number', 'LIKE', "%{$search}%");
-                  })
-                  ->orWhereHas('allocations', function($allocationQuery) use ($search) {
-                      $allocationQuery->whereNull('removal_date')
-                          ->whereHas('vehicle', function($vehicleQuery) use ($search) {
-                              $vehicleQuery->where('lorry_number', 'LIKE', "%{$search}%");
-                          });
-                  });
-            });
-        }
-
-        $tires = $query->orderBy('created_at', 'desc')->paginate(20);
-        
-        $stats = [
-            'new' => Tire::where('status', 'new')->count(),
-            'in_use' => Tire::where('status', 'in_use')->count(),
-            'used' => Tire::where('status', 'used')->count(),
-            'at_vendor' => Tire::where('status', 'at_vendor')->count(),
-            'scrap' => Tire::where('status', 'scrap')->count(),
-        ];
-
-        // Keep search query in pagination
-        $tires->appends(['search' => $request->search]);
-
-        return view('tire.inventory.index', compact('tires', 'stats'));
+    // Search functionality
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('serial_number', 'LIKE', "%{$search}%")
+              ->orWhere('brand', 'LIKE', "%{$search}%")
+              ->orWhere('size', 'LIKE', "%{$search}%")
+              ->orWhere('type', 'LIKE', "%{$search}%")
+              ->orWhere('current_location', 'LIKE', "%{$search}%")
+              ->orWhereHas('vendor', function($vendorQuery) use ($search) {
+                  $vendorQuery->where('name', 'LIKE', "%{$search}%");
+              })
+              ->orWhereHas('currentAllocation.vehicle', function($vehicleQuery) use ($search) {
+                  $vehicleQuery->where('lorry_number', 'LIKE', "%{$search}%");
+              })
+              ->orWhereHas('allocations', function($allocationQuery) use ($search) {
+                  $allocationQuery->whereNull('removal_date')
+                      ->whereHas('vehicle', function($vehicleQuery) use ($search) {
+                          $vehicleQuery->where('lorry_number', 'LIKE', "%{$search}%");
+                      });
+              });
+        });
     }
+
+    $tires = $query->orderBy('created_at', 'desc')->paginate(20);
+    
+    // Updated Stats
+    $stats = [
+        'new' => Tire::where('status', 'new')->count(),
+        'in_use' => Tire::where('status', 'in_use')->count(),
+        'used_stock' => Tire::where('status', 'used')
+            ->where('refill_count', 0)
+            ->count(),
+        'refilled_stock' => Tire::where('status', 'used')
+            ->where('refill_count', '>', 0)
+            ->count(),
+        'at_vendor' => Tire::where('status', 'at_vendor')->count(),
+        'scrap' => Tire::where('status', 'scrap')->count(),
+    ];
+
+    // Keep search query in pagination
+    $tires->appends(['search' => $request->search]);
+
+    return view('tire.inventory.index', compact('tires', 'stats'));
+}
 
     public function create()
     {
@@ -135,26 +141,30 @@ public function index(Request $request)
         return view('tire.inventory.show', compact('tire', 'lifecycleHistory', 'totalConsumedMileage'));
     }
 
-    public function edit($id)
-    {
-        $tire = Tire::with('vendor')->findOrFail($id);
-        $brands = Tire::select('brand')->distinct()->pluck('brand');
-        $sizes = Tire::select('size')->distinct()->pluck('size');
-        $types = Tire::select('type')->distinct()->pluck('type');
-        $vendors = RefillingVendor::orderBy('name')->get();
-        
-        return view('tire.inventory.edit', compact('tire', 'brands', 'sizes', 'types', 'vendors'));
-    }
+public function edit($id)
+{
+    $tire = Tire::with('vendor')->findOrFail($id);
+    $brands = Tire::select('brand')->distinct()->pluck('brand');
+    $sizes = Tire::select('size')->distinct()->pluck('size');
+    $types = Tire::select('type')->distinct()->pluck('type');
+    $vendors = RefillingVendor::orderBy('name')->get();
+    
+    return view('tire.inventory.edit', compact('tire', 'brands', 'sizes', 'types', 'vendors'));
+}
 
 public function update(Request $request, $id)
 {
     $tire = Tire::findOrFail($id);
     
     $validator = Validator::make($request->all(), [
+        'serial_number' => 'required|unique:tires,serial_number,' . $id,
         'brand' => 'required|string',
         'size' => 'required|string',
         'type' => 'required|string',
         'max_refills' => 'required|integer|min:' . $tire->refill_count . '|max:10',
+        'purchase_date' => 'required|date',
+        'purchase_price' => 'required|numeric|min:0',
+        'consumption_mileage' => 'nullable|integer|min:0',
         'notes' => 'nullable|string',
         'vendor_id' => 'nullable|exists:refilling_vendors,id'
     ]);
@@ -165,10 +175,14 @@ public function update(Request $request, $id)
 
     try {
         $tire->update([
+            'serial_number' => $request->serial_number,
             'brand' => $request->brand,
             'size' => $request->size,
             'type' => $request->type,
             'max_refills' => $request->max_refills,
+            'purchase_date' => $request->purchase_date,
+            'purchase_price' => $request->purchase_price,
+            'consumption_mileage' => $request->consumption_mileage ?? 0,
             'notes' => $request->notes,
             'vendor_id' => $request->vendor_id
         ]);
@@ -180,7 +194,6 @@ public function update(Request $request, $id)
         return redirect()->back()->with('error', 'Failed to update tire: ' . $e->getMessage());
     }
 }
-
     public function delete($id)
     {
         try {

@@ -11,6 +11,9 @@
         <a href="{{ route('tire.refilling.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-1"></i> Back to Orders
         </a>
+        <a href="{{ route('tire.refilling.pdf', $order->id) }}" class="btn btn-danger" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> PDF
+        </a>
     </div>
 </div>
 
@@ -27,7 +30,10 @@
                 </div>
                 <div class="form-group">
                     <label>Vendor</label>
-                    <p>{{ $order->vendor->name }}</p>
+                    <p><strong>{{ $order->vendor->name }}</strong></p>
+                    <p style="font-size: 13px; color: #666;">
+                        Contact: {{ $order->vendor->contact_person }} | Phone: {{ $order->vendor->phone }}
+                    </p>
                 </div>
                 <div class="form-group">
                     <label>Sent Date</label>
@@ -35,10 +41,6 @@
                 </div>
             </div>
             <div class="col-lg-6">
-                <div class="form-group">
-                    <label>Expected Return Date</label>
-                    <p>{{ $order->expected_return_date ? $order->expected_return_date->format('d-m-Y') : 'N/A' }}</p>
-                </div>
                 <div class="form-group">
                     <label>Received Date</label>
                     <p>{{ $order->received_date ? $order->received_date->format('d-m-Y') : 'Not received yet' }}</p>
@@ -51,8 +53,22 @@
                         </span>
                     </p>
                 </div>
+                <div class="form-group">
+                    <label>Total Cost</label>
+                    <p><strong>Rs. {{ number_format($order->total_cost ?? 0, 2) }}</strong></p>
+                </div>
             </div>
         </div>
+        @if($order->notes)
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="form-group">
+                    <label>Notes</label>
+                    <p>{{ $order->notes }}</p>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 
@@ -65,19 +81,33 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Serial Number</th>
                         <th>Brand</th>
                         <th>Size</th>
+                        <th>Type</th>
+                        <th>Refill Count</th>
                         <th>Refilling Cost</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($order->tires as $tire)
+                    @foreach($order->tires as $index => $tire)
                     <tr>
-                        <td>{{ $tire->serial_number }}</td>
+                        <td>{{ $index + 1 }}</td>
+                        <td>
+                            <a href="{{ route('tire.inventory.show', $tire->id) }}" class="text-primary">
+                                {{ $tire->serial_number }}
+                            </a>
+                        </td>
                         <td>{{ $tire->brand }}</td>
                         <td>{{ $tire->size }}</td>
-                        <td>Rs.{{ number_format($tire->pivot->refilling_cost ?? 0, 2) }}</td>
+                        <td>{{ $tire->type }}</td>
+                        <td>
+                            <span class="badge badge-soft-info">
+                                {{ $tire->refill_count }} / {{ $tire->max_refills }}
+                            </span>
+                        </td>
+                        <td>Rs. {{ number_format($tire->pivot->refilling_cost ?? 0, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -85,4 +115,14 @@
         </div>
     </div>
 </div>
+
+@if($order->status == 'sent')
+<div class="card mt-4">
+    <div class="card-body text-center">
+        <a href="{{ route('tire.refilling.receive', $order->id) }}" class="btn btn-success">
+            <i class="fas fa-check-circle me-1"></i> Receive Order
+        </a>
+    </div>
+</div>
+@endif
 @endsection

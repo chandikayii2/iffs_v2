@@ -58,7 +58,7 @@
                                             <input type="number" step="0.01" name="refilling_costs[]" class="form-control" required>
                                         </td>
                                         <td>
-                                            <input type="number" name="refill_counts[]" class="form-control" value="1" min="1" required>
+                                            <input type="number" name="refill_counts[]" class="form-control" value="1" min="1" required readonly>
                                         </td>
                                     </tr>
                                     @endforeach

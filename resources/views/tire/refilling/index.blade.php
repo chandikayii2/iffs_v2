@@ -52,7 +52,6 @@
                         <th>Order Number</th>
                         <th>Vendor</th>
                         <th>Sent Date</th>
-                        <th>Expected Return</th>
                         <th>Status</th>
                         <th>Total Cost</th>
                         <th width="150">Actions</th>
@@ -68,7 +67,6 @@
                         </td>
                         <td>{{ $order->vendor->name }}</td>
                         <td>{{ $order->sent_date->format('d-m-Y') }}</td>
-                        <td>{{ $order->expected_return_date ? $order->expected_return_date->format('d-m-Y') : 'N/A' }}</td>
                         <td>
                             <span class="badge badge-soft-{{ $order->status == 'sent' ? 'warning' : ($order->status == 'processing' ? 'info' : 'success') }}">
                                 {{ ucfirst($order->status) }}
@@ -98,7 +96,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4">
+                        <td colspan="6" class="text-center py-4">
                             <i class="fas fa-search fa-2x text-muted mb-2"></i>
                             <p class="text-muted">No refilling orders found matching your search criteria.</p>
                         </td>

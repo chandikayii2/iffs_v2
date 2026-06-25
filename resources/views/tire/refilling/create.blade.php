@@ -30,10 +30,12 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="form-group">
-                        <div class="d-flex"><label>Vendor *</label>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVendorModal" style="padding: 0px 10px; margin-left: 5px; margin-bottom: 5px; margin-top: -5px;">
+                        <div class="d-flex">
+                            <label>Vendor *</label>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVendorModal" style="padding: 0px 10px; margin-left: 5px; margin-bottom: 5px; margin-top: -5px;">
                                 <i class="fas fa-plus"></i> 
-                            </button></div>
+                            </button>
+                        </div>
                         <div class="input-group">
                             <select name="vendor_id" class="form-control select2" id="vendorSelect" required>
                                 <option value="">Select Vendor</option>
@@ -41,7 +43,6 @@
                                 <option value="{{ $vendor->id }}">{{ $vendor->name }} - {{ $vendor->contact_person }} ({{ $vendor->phone }})</option>
                                 @endforeach
                             </select>
-                            
                         </div>
                     </div>
                 </div>
@@ -49,12 +50,6 @@
                     <div class="form-group">
                         <label>Sent Date *</label>
                         <input type="date" name="sent_date" class="form-control" value="{{ date('Y-m-d') }}" required>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="form-group">
-                        <label>Expected Return Date</label>
-                        <input type="date" name="expected_return_date" class="form-control">
                     </div>
                 </div>
                 <div class="col-lg-12">
@@ -77,7 +72,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-end">
+            <div class="text-end mt-3">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Create Order
                 </button>
@@ -182,36 +177,35 @@
                 url: '{{ route("tire.refilling.vendors.store") }}',
                 type: 'POST',
                 data: formData,
-                // Update the AJAX success handler in the create.blade.php
-success: function(response) {
-    if (response.success) {
-        // Close modal
-        $('#addVendorModal').modal('hide');
-        
-        // Reset form
-        $('#addVendorForm')[0].reset();
-        
-        // Show success message
-        Swal.fire('Success!', response.message, 'success');
-        
-        // Add new option to select dropdown
-        let newOption = new Option(response.vendor_display, response.vendor_id, true, true);
-        $('#vendorSelect').append(newOption).trigger('change');
-    } else {
-        Swal.fire('Error!', response.message, 'error');
-    }
-    
-    // Enable button
-    $('#saveVendorBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Save Vendor');
-},
-error: function(xhr) {
-    let errorMsg = 'Failed to add vendor';
-    if (xhr.responseJSON && xhr.responseJSON.message) {
-        errorMsg = xhr.responseJSON.message;
-    }
-    Swal.fire('Error!', errorMsg, 'error');
-    $('#saveVendorBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Save Vendor');
-}
+                success: function(response) {
+                    if (response.success) {
+                        // Close modal
+                        $('#addVendorModal').modal('hide');
+                        
+                        // Reset form
+                        $('#addVendorForm')[0].reset();
+                        
+                        // Show success message
+                        Swal.fire('Success!', response.message, 'success');
+                        
+                        // Add new option to select dropdown
+                        let newOption = new Option(response.vendor_display, response.vendor_id, true, true);
+                        $('#vendorSelect').append(newOption).trigger('change');
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                    
+                    // Enable button
+                    $('#saveVendorBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Save Vendor');
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Failed to add vendor';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', errorMsg, 'error');
+                    $('#saveVendorBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Save Vendor');
+                }
             });
         });
         

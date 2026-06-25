@@ -186,6 +186,84 @@
             width: 100%;
         }
     }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-align: center;
+        transition: transform 0.3s;
+        cursor: pointer;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat-card .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 13px;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 35px;
+        opacity: 0.3;
+        margin-bottom: 5px;
+    }
+
+    .stat-card.das1 { background: linear-gradient(135deg, #3498DB, #2980B9); color: white; }
+    .stat-card.das1 .stat-number, .stat-card.das1 .stat-label { color: white; }
+    .stat-card.das1 .stat-icon { color: white; opacity: 0.5; }
+
+    .stat-card.das2 { background: linear-gradient(135deg, #2ECC71, #27AE60); color: white; }
+    .stat-card.das2 .stat-number, .stat-card.das2 .stat-label { color: white; }
+    .stat-card.das2 .stat-icon { color: white; opacity: 0.5; }
+
+    .stat-card.das3 { background: linear-gradient(135deg, #F39C12, #E67E22); color: white; }
+    .stat-card.das3 .stat-number, .stat-card.das3 .stat-label { color: white; }
+    .stat-card.das3 .stat-icon { color: white; opacity: 0.5; }
+
+    .stat-card.das4 { background: linear-gradient(135deg, #9B59B6, #8E44AD); color: white; }
+    .stat-card.das4 .stat-number, .stat-card.das4 .stat-label { color: white; }
+    .stat-card.das4 .stat-icon { color: white; opacity: 0.5; }
+
+    .stat-card.das5 { background: linear-gradient(135deg, #E74C3C, #C0392B); color: white; }
+    .stat-card.das5 .stat-number, .stat-card.das5 .stat-label { color: white; }
+    .stat-card.das5 .stat-icon { color: white; opacity: 0.5; }
+
+    .stat-card.das6 { background: linear-gradient(135deg, #1ABC9C, #16A085); color: white; }
+    .stat-card.das6 .stat-number, .stat-card.das6 .stat-label { color: white; }
+    .stat-card.das6 .stat-icon { color: white; opacity: 0.5; }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>
 
 @section('content')
@@ -201,61 +279,48 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-3 col-sm-6 col-6">
-        <div class="dash-count">
-            <div class="dash-counts">
-                <h4>{{ $stats['new'] }}</h4>
-                <h5>New Tires</h5>
-            </div>
-            <div class="dash-imgs">
-                <i class="fas fa-star"></i>
-            </div>
-        </div>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <!-- New Tires -->
+    <div class="stat-card das1">
+        <div class="stat-icon"><i class="fas fa-star"></i></div>
+        <div class="stat-number">{{ $stats['new'] }}</div>
+        <div class="stat-label">New Tires</div>
     </div>
-    <div class="col-lg-3 col-sm-6 col-12">
-        <div class="dash-count das1">
-            <div class="dash-counts">
-                <h4>{{ $stats['in_use'] }}</h4>
-                <h5>In Use</h5>
-            </div>
-            <div class="dash-imgs">
-                <i class="fas fa-car"></i>
-            </div>
-        </div>
+
+    <!-- In Use -->
+    <div class="stat-card das2">
+        <div class="stat-icon"><i class="fas fa-car"></i></div>
+        <div class="stat-number">{{ $stats['in_use'] }}</div>
+        <div class="stat-label">In Use</div>
     </div>
-    <div class="col-lg-2 col-sm-6 col-12">
-        <div class="dash-count das2">
-            <div class="dash-counts">
-                <h4>{{ $stats['used'] }}</h4>
-                <h5>Used (Store)</h5>
-            </div>
-            <div class="dash-imgs">
-                <i class="fas fa-warehouse"></i>
-            </div>
-        </div>
+
+    <!-- Used (Stock) -->
+    <div class="stat-card das3">
+        <div class="stat-icon"><i class="fas fa-warehouse"></i></div>
+        <div class="stat-number">{{ $stats['used_stock'] }}</div>
+        <div class="stat-label">Used (Stock)</div>
     </div>
-    <div class="col-lg-2 col-sm-6 col-12">
-        <div class="dash-count das3">
-            <div class="dash-counts">
-                <h4>{{ $stats['at_vendor'] }}</h4>
-                <h5>Refilling</h5>
-            </div>
-            <div class="dash-imgs">
-                <i class="fas fa-truck"></i>
-            </div>
-        </div>
+
+    <!-- Refilled Stock -->
+    <div class="stat-card das4">
+        <div class="stat-icon"><i class="fas fa-sync-alt"></i></div>
+        <div class="stat-number">{{ $stats['refilled_stock'] }}</div>
+        <div class="stat-label">Refilled Stock</div>
     </div>
-    <div class="col-lg-2 col-sm-6 col-12">
-        <div class="dash-count das4">
-            <div class="dash-counts" >
-                <h4>{{ $stats['scrap'] }}</h4>
-                <h5>Scrap</h5>
-            </div>
-            <div class="dash-imgs">
-                <i class="fas fa-trash-alt"></i>
-            </div>
-        </div>
+
+    <!-- Refilling -->
+    <div class="stat-card das5">
+        <div class="stat-icon"><i class="fas fa-truck"></i></div>
+        <div class="stat-number">{{ $stats['at_vendor'] }}</div>
+        <div class="stat-label">Refilling</div>
+    </div>
+
+    <!-- Scrap -->
+    <div class="stat-card das6">
+        <div class="stat-icon"><i class="fas fa-trash-alt"></i></div>
+        <div class="stat-number">{{ $stats['scrap'] }}</div>
+        <div class="stat-label">Scrap</div>
     </div>
 </div>
 
@@ -327,7 +392,13 @@
                                         } elseif($tire->status == 'in_use') {
                                             $badgeClass = 'badge-soft-primary';
                                         } elseif($tire->status == 'used') {
-                                            $badgeClass = 'badge-soft-warning';
+                                            if($tire->refill_count > 0) {
+                                                $badgeClass = 'badge-soft-info';
+                                                $statusText = 'Refilled';
+                                            } else {
+                                                $badgeClass = 'badge-soft-warning';
+                                                $statusText = 'Used';
+                                            }
                                         } elseif($tire->status == 'at_vendor') {
                                             $badgeClass = 'badge-soft-danger';
                                         } elseif($tire->status == 'scrap') {
@@ -384,9 +455,15 @@
                                             $locationClass = 'location-scrap';
                                             $locationText = 'Scrap Yard';
                                         } elseif($tire->status == 'used') {
-                                            $locationIcon = 'fa-warehouse';
-                                            $locationClass = 'location-store';
-                                            $locationText = 'In Store';
+                                            if($tire->refill_count > 0) {
+                                                $locationIcon = 'fa-sync-alt';
+                                                $locationClass = 'location-refilling';
+                                                $locationText = 'Refilled Stock';
+                                            } else {
+                                                $locationIcon = 'fa-warehouse';
+                                                $locationClass = 'location-store';
+                                                $locationText = 'In Stock';
+                                            }
                                         } elseif($tire->status == 'new') {
                                             $locationIcon = 'fa-box';
                                             $locationClass = 'location-store';
