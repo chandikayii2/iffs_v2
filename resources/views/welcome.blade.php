@@ -7,180 +7,274 @@
     <meta name="description" content="IFFS System Selection">
     <meta name="author" content="IDEAL SOFT">
     <title>System Selection - IFFS</title>
-    <link rel="shortcut icon" type="image/x-icon" href="#">
-    <link rel="stylesheet" href="assets/admin/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/admin/css/fontawesome.min.css">
-    <link rel="stylesheet" href="assets/admin/css/all.min.css">
-    <link rel="stylesheet" href="assets/admin/css/style.css">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/admin/img/favicon.png') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/all.min.css') }}">
     <style>
         body {
-            background: #f7f7f7;
-            font-family: 'Poppins', sans-serif;
-        }
-        .system-selection-wrapper {
+            background: #f4f7f6;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #333333;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-selection {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-        .system-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            overflow: hidden;
-            margin-bottom: 30px;
-            border: 1px solid #e5e5e5;
-        }
-        .system-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        .card-header-icon {
-            padding: 40px 0 20px;
-            text-align: center;
-            font-size: 80px;
-        }
-        .iffs-header {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-        }
-        .tire-header {
-            background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%);
-        }
-        .card-content {
-            padding: 30px;
-            text-align: center;
-        }
-        .system-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        .system-description {
-            color: #7f8c8d;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .launch-btn {
-            padding: 10px 30px;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.3s;
-            border: none;
-            color: white;
-        }
-        .launch-iffs {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-        }
-        .launch-tire {
-            background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%);
-        }
-        .launch-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
+
         .user-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 50px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .logout-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #dc3545;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 50px;
-            text-decoration: none;
+            color: #4b5563;
+            font-size: 14px;
             font-weight: 500;
-            transition: all 0.3s;
-            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-link {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #ef4444;
+            padding: 6px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
         .logout-link:hover {
-            background: #c82333;
-            color: white;
-            transform: scale(1.05);
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
         }
+
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .logo-wrapper {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .logo-img {
+            max-height: 70px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .welcome-subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .system-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease-in-out;
+            cursor: pointer;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .system-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #cbd5e1;
+        }
+
+        .card-header-icon {
+            padding: 35px 0 20px;
+            text-align: center;
+            background: #f8fafc;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .iffs-card .icon-circle {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        .tyre-card .icon-circle {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
+
+        .card-content {
+            padding: 25px 30px 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .system-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #111827;
+        }
+
+        .system-description {
+            color: #4b5563;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+
+        .launch-btn {
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .launch-iffs {
+            background: #3b82f6;
+        }
+        .launch-iffs:hover {
+            background: #2563eb;
+        }
+        
+        .launch-tyre {
+            background: #f97316;
+        }
+        .launch-tyre:hover {
+            background: #ea580c;
+        }
+
+        .footer-credit {
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            padding: 15px 0;
+            text-align: center;
+            font-size: 13px;
+            color: #9ca3af;
+            width: 100%;
+        }
+        
         @media (max-width: 768px) {
-            .system-card {
-                margin: 15px;
+            .navbar-selection {
+                padding: 15px 20px;
             }
-            .system-title {
-                font-size: 20px;
+            .welcome-title {
+                font-size: 26px;
+            }
+            .system-card {
+                margin-bottom: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <a href="{{ route('logout') }}" class="logout-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
-    <form id="logout-form" action="{{ route('logout') }}" method="GET" style="display: none;"></form>
-
-    <div class="user-badge">
-        <i class="fas fa-user-circle"></i> {{ Auth::user()->name ?? 'User' }}
+    <div class="navbar-selection">
+        <div class="user-badge">
+            <i class="fas fa-user-circle text-secondary"></i> <strong>User:</strong> {{ Auth::user()->name ?? 'User' }}
+        </div>
+        
+        <a href="{{ route('logout') }}" class="logout-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class="fas fa-sign-out-alt me-1"></i> Logout
+        </a>
+        <form id="logout-form" action="{{ route('logout') }}" method="GET" style="display: none;"></form>
     </div>
 
-    <div class="system-selection-wrapper">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-12 text-center mb-5">
-                    <h1 style="color: #2c3e50; font-size: 42px; font-weight: 600;">Welcome to IFFS</h1>
-                    <p style="color: #7f8c8d; font-size: 18px;">Choose your system to continue</p>
-                </div>
+    <div class="main-container container">
+        <div class="row justify-content-center text-center">
+            <div class="col-12 logo-wrapper">
+                <!-- <img src="{{ asset('assets/admin/img/logo.png') }}" class="logo-img" alt="IFFS Logo"> -->
+            </div>
+            <div class="col-12">
+                <h1 class="welcome-title">Welcome to IFFS Suite</h1>
+                <p class="welcome-subtitle">Select a management module below to launch the system workspace.</p>
+            </div>
+        </div>
 
-                <div class="col-md-5">
-                    <div class="system-card" onclick="window.location.href='{{ route('dashboard') }}'">
-                        <div class="iffs-header card-header-icon">
-                            <i class="fas fa-truck-moving" style="color: white; font-size: 80px;"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3 class="system-title">IFFS Management System</h3>
-                            <p class="system-description">
-                                Complete Inventory Management System with Purchase Orders, 
-                                GRN, Stock Management, Supplier Management, User Management 
-                                and Comprehensive Reporting
-                            </p>
-                            <button class="launch-btn launch-iffs">
-                                Launch System <i class="fas fa-arrow-right"></i>
-                            </button>
+        <div class="row justify-content-center g-4" style="max-width: 900px; width: 100%;">
+            <div class="col-md-6">
+                <div class="system-card iffs-card" onclick="window.location.href='{{ route('dashboard') }}'">
+                    <div class="card-header-icon">
+                        <div class="icon-circle">
+                            <i class="fas fa-truck-moving"></i>
                         </div>
                     </div>
+                    <div class="card-content">
+                        <h3 class="system-title">IFFS Management System</h3>
+                        <p class="system-description">
+                            Complete Factory Inventory Control with Purchase Orders, Goods Received Notes (GRN), Stock Trackers, Supplier Catalogues, and Audit Analytics.
+                        </p>
+                        <button class="launch-btn launch-iffs">
+                            Launch Workspace <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                <div class="col-md-5">
-                    <div class="system-card" onclick="window.location.href='{{ route('tire.dashboard') }}'">
-                        <div class="tire-header card-header-icon">
-                            <i class="fas fa-car" style="color: white; font-size: 80px;"></i>
+            <div class="col-md-6">
+                <div class="system-card tyre-card" onclick="window.location.href='{{ route('tyre.dashboard') }}'">
+                    <div class="card-header-icon">
+                        <div class="icon-circle">
+                            <i class="fas fa-circle-notch"></i>
                         </div>
-                        <div class="card-content">
-                            <h3 class="system-title">Tire Lifecycle Management</h3>
-                            <p class="system-description">
-                                Specialized Tire Tracking System with Serial Number Management,
-                                Vehicle Allocation, Refilling Module, Tire Passport History,
-                                and Complete Scrap Management
-                            </p>
-                            <button class="launch-btn launch-tire">
-                                Launch System <i class="fas fa-arrow-right"></i>
-                            </button>
-                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="system-title">Tyre Lifecycle Management</h3>
+                        <p class="system-description">
+                            Specialized Fleet Tyre Tracking with Serial Number Histories, Live Vehicle Allocations, Retreading/Refill Orders, Scrap Controls, and Tyre Passports.
+                        </p>
+                        <button class="launch-btn launch-tyre">
+                            Launch Workspace <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="assets/admin/js/jquery-3.6.0.min.js"></script>
-    <script src="assets/admin/js/bootstrap.bundle.min.js"></script>
+    <div class="footer-credit">
+        &copy; {{ date('Y') }} IDEAL SOFT. All rights reserved.
+    </div>
+
+    <script src="{{ asset('assets/admin/js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

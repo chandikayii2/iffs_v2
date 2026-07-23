@@ -13,13 +13,13 @@ use App\Http\Controllers\V1\User\UserRoleController;
 use App\Http\Controllers\V1\User\UserRolePermisionController;
 use App\Http\Controllers\ProductReportController;
 
-// Tire System Controllers
-use App\Http\Controllers\Tire\TireDashboardController;
-use App\Http\Controllers\Tire\TireInventoryController;
-use App\Http\Controllers\Tire\VehicleAllocationController;
-use App\Http\Controllers\Tire\RefillingController;
-use App\Http\Controllers\Tire\TireIssueController;
-use App\Http\Controllers\Tire\TireScrapController;
+// Tyre System Controllers
+use App\Http\Controllers\Tyre\TyreDashboardController;
+use App\Http\Controllers\Tyre\TyreInventoryController;
+use App\Http\Controllers\Tyre\VehicleAllocationController;
+use App\Http\Controllers\Tyre\RefillingController;
+use App\Http\Controllers\Tyre\TyreIssueController;
+use App\Http\Controllers\Tyre\TyreScrapController;
 
 /*
 |--------------------------------------------------------------------------
@@ -151,73 +151,75 @@ Route::group(['middleware' => 'AdminAuth1'], function () {
     // ============================================================
     // TIRE LIFECYCLE MANAGEMENT SYSTEM ROUTES
     // ============================================================
-    Route::prefix('tire')->group(function () {
-        // Tire Issue Management Routes
+    Route::prefix('tyre')->group(function () {
+        // Tyre Issue Management Routes
 // ============================================
 Route::prefix('issue')->group(function () {
-    Route::get('/', [TireIssueController::class, 'index'])->name('tire.issue.index');
-    Route::get('/create', [TireIssueController::class, 'create'])->name('tire.issue.create');
-    Route::post('/store', [TireIssueController::class, 'store'])->name('tire.issue.store');
-    Route::get('/{id}', [TireIssueController::class, 'show'])->name('tire.issue.show');
-    Route::get('/{id}/edit', [TireIssueController::class, 'edit'])->name('tire.issue.edit');
-    Route::put('/{id}', [TireIssueController::class, 'update'])->name('tire.issue.update');
-    Route::delete('/{id}', [TireIssueController::class, 'delete'])->name('tire.issue.delete');
-    Route::get('/get-tire-data/{tireId}', [TireIssueController::class, 'getTireData'])->name('tire.issue.get-tire-data');
-    Route::get('/{id}/pdf', [TireIssueController::class, 'generatePdf'])->name('tire.issue.pdf');
-    Route::get('/{id}/gate-pass', [TireIssueController::class, 'generateGatePass'])->name('tire.issue.gate-pass');
+    Route::get('/', [TyreIssueController::class, 'index'])->name('tyre.issue.index');
+    Route::get('/create', [TyreIssueController::class, 'create'])->name('tyre.issue.create');
+    Route::post('/store', [TyreIssueController::class, 'store'])->name('tyre.issue.store');
+    Route::get('/{id}', [TyreIssueController::class, 'show'])->name('tyre.issue.show');
+    Route::get('/{id}/edit', [TyreIssueController::class, 'edit'])->name('tyre.issue.edit');
+    Route::put('/{id}', [TyreIssueController::class, 'update'])->name('tyre.issue.update');
+    Route::delete('/{id}', [TyreIssueController::class, 'delete'])->name('tyre.issue.delete');
+    Route::get('/get-tyre-data/{tyreId}', [TyreIssueController::class, 'getTyreData'])->name('tyre.issue.get-tyre-data');
+    Route::get('/{id}/pdf', [TyreIssueController::class, 'generatePdf'])->name('tyre.issue.pdf');
+    Route::get('/{id}/gate-pass', [TyreIssueController::class, 'generateGatePass'])->name('tyre.issue.gate-pass');
 });
         // ============================================
-        // Tire Dashboard
+        // Tyre Dashboard
         // ============================================
-        Route::get('/dashboard', [TireDashboardController::class, 'index'])->name('tire.dashboard');
-        Route::get('/dashboard/stats', [TireDashboardController::class, 'getStats'])->name('tire.dashboard.stats');
-        Route::get('/alerts', [TireDashboardController::class, 'getAlerts'])->name('tire.alerts');
+        Route::get('/dashboard', [TyreDashboardController::class, 'index'])->name('tyre.dashboard');
+        Route::get('/breakdown', [TyreDashboardController::class, 'breakdown'])->name('tyre.breakdown');
+        Route::get('/category/{type}', [TyreDashboardController::class, 'categoryTyres'])->name('tyre.category.list');
+        Route::get('/dashboard/stats', [TyreDashboardController::class, 'getStats'])->name('tyre.dashboard.stats');
+        Route::get('/alerts', [TyreDashboardController::class, 'getAlerts'])->name('tyre.alerts');
         
         // ============================================
-        // Tire Inventory Management
+        // Tyre Inventory Management
         // ============================================
        Route::prefix('inventory')->group(function () {
-    Route::get('/', [TireInventoryController::class, 'index'])->name('tire.inventory.index');
-    Route::get('/create', [TireInventoryController::class, 'create'])->name('tire.inventory.create');
-    Route::post('/store', [TireInventoryController::class, 'store'])->name('tire.inventory.store');
-    Route::get('/{id}', [TireInventoryController::class, 'show'])->name('tire.inventory.show');
-    Route::get('/edit/{id}', [TireInventoryController::class, 'edit'])->name('tire.inventory.edit');
-    Route::put('/update/{id}', [TireInventoryController::class, 'update'])->name('tire.inventory.update');
-    Route::delete('/delete/{id}', [TireInventoryController::class, 'delete'])->name('tire.inventory.delete');
-    Route::get('/allocate-to-vehicle/{id}', [TireInventoryController::class, 'allocateToVehicle'])->name('tire.inventory.allocate-to-vehicle');
-    Route::post('/allocate-to-vehicle/{id}', [TireInventoryController::class, 'processAllocateToVehicle'])->name('tire.inventory.allocate-to-vehicle.process');
-    Route::get('/send-refill/{id}', [TireInventoryController::class, 'sendForRefill'])->name('tire.inventory.send-refill');
-    Route::get('/gate-pass/{id}', [TireInventoryController::class, 'generateGatePass'])->name('tire.inventory.gate-pass');
-    Route::get('/remove-from-vehicle/{tireId}', [TireInventoryController::class, 'removeTireFromVehicle'])->name('tire.inventory.remove-from-vehicle');
-    Route::post('/process-removal/{tireId}', [TireInventoryController::class, 'processTireRemoval'])->name('tire.inventory.process-removal');
-    Route::post('/update-refill-count/{tireId}', [TireInventoryController::class, 'updateRefillCount'])->name('tire.inventory.update-refill-count');
-    Route::get('/export/excel', [TireInventoryController::class, 'exportExcel'])->name('tire.inventory.export.excel');
-    Route::get('/export/pdf', [TireInventoryController::class, 'exportPdf'])->name('tire.inventory.export.pdf');
-    Route::get('/api/brands', [TireInventoryController::class, 'getBrands'])->name('tire.inventory.api.brands');
-    Route::get('/api/sizes', [TireInventoryController::class, 'getSizes'])->name('tire.inventory.api.sizes');
-    Route::get('/api/types', [TireInventoryController::class, 'getTypes'])->name('tire.inventory.api.types');
+    Route::get('/', [TyreInventoryController::class, 'index'])->name('tyre.inventory.index');
+    Route::get('/create', [TyreInventoryController::class, 'create'])->name('tyre.inventory.create');
+    Route::post('/store', [TyreInventoryController::class, 'store'])->name('tyre.inventory.store');
+    Route::get('/{id}', [TyreInventoryController::class, 'show'])->name('tyre.inventory.show');
+    Route::get('/edit/{id}', [TyreInventoryController::class, 'edit'])->name('tyre.inventory.edit');
+    Route::put('/update/{id}', [TyreInventoryController::class, 'update'])->name('tyre.inventory.update');
+    Route::delete('/delete/{id}', [TyreInventoryController::class, 'delete'])->name('tyre.inventory.delete');
+    Route::get('/allocate-to-vehicle/{id}', [TyreInventoryController::class, 'allocateToVehicle'])->name('tyre.inventory.allocate-to-vehicle');
+    Route::post('/allocate-to-vehicle/{id}', [TyreInventoryController::class, 'processAllocateToVehicle'])->name('tyre.inventory.allocate-to-vehicle.process');
+    Route::get('/send-refill/{id}', [TyreInventoryController::class, 'sendForRefill'])->name('tyre.inventory.send-refill');
+    Route::get('/gate-pass/{id}', [TyreInventoryController::class, 'generateGatePass'])->name('tyre.inventory.gate-pass');
+    Route::get('/remove-from-vehicle/{tyreId}', [TyreInventoryController::class, 'removeTyreFromVehicle'])->name('tyre.inventory.remove-from-vehicle');
+    Route::post('/process-removal/{tyreId}', [TyreInventoryController::class, 'processTyreRemoval'])->name('tyre.inventory.process-removal');
+    Route::post('/update-refill-count/{tyreId}', [TyreInventoryController::class, 'updateRefillCount'])->name('tyre.inventory.update-refill-count');
+    Route::get('/export/excel', [TyreInventoryController::class, 'exportExcel'])->name('tyre.inventory.export.excel');
+    Route::get('/export/pdf', [TyreInventoryController::class, 'exportPdf'])->name('tyre.inventory.export.pdf');
+    Route::get('/api/brands', [TyreInventoryController::class, 'getBrands'])->name('tyre.inventory.api.brands');
+    Route::get('/api/sizes', [TyreInventoryController::class, 'getSizes'])->name('tyre.inventory.api.sizes');
+    Route::get('/api/types', [TyreInventoryController::class, 'getTypes'])->name('tyre.inventory.api.types');
 });
         
         // ============================================
         // Vehicle and Allocation Management
         // ============================================
         Route::prefix('vehicles')->group(function () {
-            Route::get('/', [VehicleAllocationController::class, 'index'])->name('tire.vehicles.index');
-            Route::get('/create', [VehicleAllocationController::class, 'createVehicle'])->name('tire.vehicles.create');
-            Route::post('/store', [VehicleAllocationController::class, 'storeVehicle'])->name('tire.vehicles.store');
-            Route::get('/{vehicleId}', [VehicleAllocationController::class, 'showVehicle'])->name('tire.vehicles.show');
-            Route::get('/edit/{vehicleId}', [VehicleAllocationController::class, 'editVehicle'])->name('tire.vehicles.edit');
-            Route::put('/update/{vehicleId}', [VehicleAllocationController::class, 'updateVehicle'])->name('tire.vehicles.update');
-            Route::delete('/delete/{vehicleId}', [VehicleAllocationController::class, 'deleteVehicle'])->name('tire.vehicles.delete');
-            Route::get('/{vehicleId}/allocate', [VehicleAllocationController::class, 'allocateForm'])->name('tire.vehicles.allocate');
-            Route::post('/{vehicleId}/allocate', [VehicleAllocationController::class, 'allocateTires'])->name('tire.vehicles.allocate.store');
-            Route::get('/remove/{allocationId}', [VehicleAllocationController::class, 'removeTire'])->name('tire.vehicles.remove');
-            Route::post('/remove/{allocationId}', [VehicleAllocationController::class, 'processRemoval'])->name('tire.vehicles.remove.process');
-            Route::get('/{vehicleId}/history', [VehicleAllocationController::class, 'vehicleHistory'])->name('tire.vehicles.history');
-            Route::get('/reports/mileage-summary', [VehicleAllocationController::class, 'mileageReport'])->name('tire.vehicles.report.mileage');
-            Route::post('/{vehicleId}/update-mileage', [VehicleAllocationController::class, 'updateMileage'])->name('tire.vehicles.update-mileage');
-            Route::get('/api/available-tires', [VehicleAllocationController::class, 'getAvailableTires'])->name('tire.vehicles.api.available-tires');
-            Route::get('/api/vehicle/{vehicleId}/current-tires', [VehicleAllocationController::class, 'getCurrentTires'])->name('tire.vehicles.api.current-tires');
+            Route::get('/', [VehicleAllocationController::class, 'index'])->name('tyre.vehicles.index');
+            Route::get('/create', [VehicleAllocationController::class, 'createVehicle'])->name('tyre.vehicles.create');
+            Route::post('/store', [VehicleAllocationController::class, 'storeVehicle'])->name('tyre.vehicles.store');
+            Route::get('/{vehicleId}', [VehicleAllocationController::class, 'showVehicle'])->name('tyre.vehicles.show');
+            Route::get('/edit/{vehicleId}', [VehicleAllocationController::class, 'editVehicle'])->name('tyre.vehicles.edit');
+            Route::put('/update/{vehicleId}', [VehicleAllocationController::class, 'updateVehicle'])->name('tyre.vehicles.update');
+            Route::delete('/delete/{vehicleId}', [VehicleAllocationController::class, 'deleteVehicle'])->name('tyre.vehicles.delete');
+            Route::get('/{vehicleId}/allocate', [VehicleAllocationController::class, 'allocateForm'])->name('tyre.vehicles.allocate');
+            Route::post('/{vehicleId}/allocate', [VehicleAllocationController::class, 'allocateTyres'])->name('tyre.vehicles.allocate.store');
+            Route::get('/remove/{allocationId}', [VehicleAllocationController::class, 'removeTyre'])->name('tyre.vehicles.remove');
+            Route::post('/remove/{allocationId}', [VehicleAllocationController::class, 'processRemoval'])->name('tyre.vehicles.remove.process');
+            Route::get('/{vehicleId}/history', [VehicleAllocationController::class, 'vehicleHistory'])->name('tyre.vehicles.history');
+            Route::get('/reports/mileage-summary', [VehicleAllocationController::class, 'mileageReport'])->name('tyre.vehicles.report.mileage');
+            Route::post('/{vehicleId}/update-mileage', [VehicleAllocationController::class, 'updateMileage'])->name('tyre.vehicles.update-mileage');
+            Route::get('/api/available-tyres', [VehicleAllocationController::class, 'getAvailableTyres'])->name('tyre.vehicles.api.available-tyres');
+            Route::get('/api/vehicle/{vehicleId}/current-tyres', [VehicleAllocationController::class, 'getCurrentTyres'])->name('tyre.vehicles.api.current-tyres');
         });
         
        // ============================================
@@ -225,85 +227,89 @@ Route::prefix('issue')->group(function () {
 // ============================================
 Route::prefix('refilling')->group(function () {
     // Orders
-    Route::get('/', [RefillingController::class, 'index'])->name('tire.refilling.index');
-    Route::get('/create', [RefillingController::class, 'createOrder'])->name('tire.refilling.create');
-    Route::post('/store', [RefillingController::class, 'storeOrder'])->name('tire.refilling.store');
-    Route::get('/{orderId}', [RefillingController::class, 'showOrder'])->name('tire.refilling.show');
-    Route::get('/{orderId}/receive', [RefillingController::class, 'receiveOrder'])->name('tire.refilling.receive');
-    Route::post('/{orderId}/receive', [RefillingController::class, 'processReceipt'])->name('tire.refilling.receive.process');
-    Route::get('/edit/{orderId}', [RefillingController::class, 'editOrder'])->name('tire.refilling.edit');
-    Route::put('/update/{orderId}', [RefillingController::class, 'updateOrder'])->name('tire.refilling.update');
-    Route::delete('/cancel/{orderId}', [RefillingController::class, 'cancelOrder'])->name('tire.refilling.cancel');
-    Route::get('/{orderId}/pdf', [RefillingController::class, 'generatePdf'])->name('tire.refilling.pdf');
+    Route::get('/', [RefillingController::class, 'index'])->name('tyre.refilling.index');
+    Route::get('/create', [RefillingController::class, 'createOrder'])->name('tyre.refilling.create');
+    Route::post('/store', [RefillingController::class, 'storeOrder'])->name('tyre.refilling.store');
+    Route::get('/{orderId}', [RefillingController::class, 'showOrder'])->name('tyre.refilling.show');
+    Route::get('/{orderId}/receive', [RefillingController::class, 'receiveOrder'])->name('tyre.refilling.receive');
+    Route::post('/{orderId}/receive', [RefillingController::class, 'processReceipt'])->name('tyre.refilling.receive.process');
+    Route::post('/{orderId}/payment', [RefillingController::class, 'recordPayment'])->name('tyre.refilling.payment.store');
+    Route::get('/edit/{orderId}', [RefillingController::class, 'editOrder'])->name('tyre.refilling.edit');
+    Route::put('/update/{orderId}', [RefillingController::class, 'updateOrder'])->name('tyre.refilling.update');
+    Route::delete('/cancel/{orderId}', [RefillingController::class, 'cancelOrder'])->name('tyre.refilling.cancel');
+    Route::get('/{orderId}/pdf', [RefillingController::class, 'generatePdf'])->name('tyre.refilling.pdf');
 
     
     // Vendor Management - FIXED ROUTES
     Route::prefix('vendors')->group(function () {
-        Route::get('/', [RefillingController::class, 'manageVendors'])->name('tire.refilling.vendors');
-        Route::get('/manage', [RefillingController::class, 'manageVendors'])->name('tire.refilling.vendors.manage');
-        Route::post('/store', [RefillingController::class, 'storeVendor'])->name('tire.refilling.vendors.store');
-        Route::get('/{vendorId}', [RefillingController::class, 'showVendor'])->name('tire.refilling.vendors.show');
-        Route::get('/{vendorId}/edit', [RefillingController::class, 'editVendor'])->name('tire.refilling.vendors.edit');
-        Route::put('/{vendorId}/update', [RefillingController::class, 'updateVendor'])->name('tire.refilling.vendors.update');
-        Route::delete('/{vendorId}/delete', [RefillingController::class, 'deleteVendor'])->name('tire.refilling.vendors.delete');
+        Route::get('/', [RefillingController::class, 'manageVendors'])->name('tyre.refilling.vendors');
+        Route::get('/manage', [RefillingController::class, 'manageVendors'])->name('tyre.refilling.vendors.manage');
+        Route::post('/store', [RefillingController::class, 'storeVendor'])->name('tyre.refilling.vendors.store');
+        Route::get('/{vendorId}', [RefillingController::class, 'showVendor'])->name('tyre.refilling.vendors.show');
+        Route::get('/{vendorId}/edit', [RefillingController::class, 'editVendor'])->name('tyre.refilling.vendors.edit');
+        Route::put('/{vendorId}/update', [RefillingController::class, 'updateVendor'])->name('tyre.refilling.vendors.update');
+        Route::delete('/{vendorId}/delete', [RefillingController::class, 'deleteVendor'])->name('tyre.refilling.vendors.delete');
     });
     
     // Reports
-    Route::get('/reports/summary', [RefillingController::class, 'refillingReport'])->name('tire.refilling.reports.summary');
-    Route::get('/reports/vendor-performance', [RefillingController::class, 'vendorPerformance'])->name('tire.refilling.reports.vendor');
+    Route::get('/reports/summary', [RefillingController::class, 'refillingReport'])->name('tyre.refilling.reports.summary');
+    Route::get('/reports/vendor-performance', [RefillingController::class, 'vendorPerformance'])->name('tyre.refilling.reports.vendor');
     
     // API endpoints
-    Route::get('/api/available-for-refill', [RefillingController::class, 'getAvailableForRefill'])->name('tire.refilling.api.available');
+    Route::get('/api/available-for-refill', [RefillingController::class, 'getAvailableForRefill'])->name('tyre.refilling.api.available');
 });
         
         // ============================================
         // Scrap and Disposal Management
         // ============================================
         Route::prefix('scrap')->group(function () {
-            Route::get('/', [TireScrapController::class, 'index'])->name('tire.scrap.index');
-            Route::get('/tire/{tireId}', [TireScrapController::class, 'scrapTire'])->name('tire.scrap.create');
-            Route::post('/tire/{tireId}', [TireScrapController::class, 'processScrap'])->name('tire.scrap.process');
-            Route::post('/bulk', [TireScrapController::class, 'bulkScrap'])->name('tire.scrap.bulk');
-            Route::get('/report/generate', [TireScrapController::class, 'scrapReport'])->name('tire.scrap.report');
-            Route::get('/report/download/pdf', [TireScrapController::class, 'downloadScrapReport'])->name('tire.scrap.report.pdf');
-            Route::get('/report/download/excel', [TireScrapController::class, 'downloadScrapReportExcel'])->name('tire.scrap.report.excel');
-            Route::post('/restore/{scrapId}', [TireScrapController::class, 'restoreTire'])->name('tire.scrap.restore');
-            Route::get('/disposal-methods', [TireScrapController::class, 'disposalMethods'])->name('tire.scrap.disposal-methods');
-            Route::post('/disposal-methods/store', [TireScrapController::class, 'storeDisposalMethod'])->name('tire.scrap.disposal-methods.store');
-            Route::get('/analytics', [TireScrapController::class, 'scrapAnalytics'])->name('tire.scrap.analytics');
+            Route::get('/', [TyreScrapController::class, 'index'])->name('tyre.scrap.index');
+            Route::get('/export-pdf', [TyreScrapController::class, 'exportPdf'])->name('tyre.scrap.export-pdf');
+            Route::get('/tyre/{tyreId}', [TyreScrapController::class, 'scrapTyre'])->name('tyre.scrap.create');
+            Route::post('/tyre/{tyreId}', [TyreScrapController::class, 'processScrap'])->name('tyre.scrap.process');
+            Route::post('/bulk', [TyreScrapController::class, 'bulkScrap'])->name('tyre.scrap.bulk');
+            Route::get('/report/generate', [TyreScrapController::class, 'scrapReport'])->name('tyre.scrap.report');
+            Route::get('/report/download/pdf', [TyreScrapController::class, 'downloadScrapReport'])->name('tyre.scrap.report.pdf');
+            Route::get('/report/download/excel', [TyreScrapController::class, 'downloadScrapReportExcel'])->name('tyre.scrap.report.excel');
+            Route::post('/restore/{scrapId}', [TyreScrapController::class, 'restoreTyre'])->name('tyre.scrap.restore');
+            Route::post('/send-kurunagala/{scrapId}', [TyreScrapController::class, 'sendToKurunagala'])->name('tyre.scrap.send-kurunagala');
+            Route::post('/sell/{scrapId}', [TyreScrapController::class, 'sellScrap'])->name('tyre.scrap.sell');
+            Route::get('/disposal-methods', [TyreScrapController::class, 'disposalMethods'])->name('tyre.scrap.disposal-methods');
+            Route::post('/disposal-methods/store', [TyreScrapController::class, 'storeDisposalMethod'])->name('tyre.scrap.disposal-methods.store');
+            Route::get('/analytics', [TyreScrapController::class, 'scrapAnalytics'])->name('tyre.scrap.analytics');
         });
         
         // ============================================
-        // Tire Passport (Lifecycle History)
+        // Tyre Passport (Lifecycle History)
         // ============================================
         Route::prefix('passport')->group(function () {
-            Route::get('/search', [TireInventoryController::class, 'searchPassport'])->name('tire.passport.search');
-            Route::post('/lookup', [TireInventoryController::class, 'lookupTire'])->name('tire.passport.lookup');
-            Route::get('/{tireId}/pdf', [TireInventoryController::class, 'generatePassportPdf'])->name('tire.passport.pdf');
-            Route::get('/{tireId}/print', [TireInventoryController::class, 'printPassport'])->name('tire.passport.print');
+            Route::get('/search', [TyreInventoryController::class, 'searchPassport'])->name('tyre.passport.search');
+            Route::post('/lookup', [TyreInventoryController::class, 'lookupTyre'])->name('tyre.passport.lookup');
+            Route::get('/{tyreId}/pdf', [TyreInventoryController::class, 'generatePassportPdf'])->name('tyre.passport.pdf');
+            Route::get('/{tyreId}/print', [TyreInventoryController::class, 'printPassport'])->name('tyre.passport.print');
         });
         
         // ============================================
-        // Tire Reports and Analytics
+        // Tyre Reports and Analytics
         // ============================================
         Route::prefix('reports')->group(function () {
-            Route::get('/analytics', [TireDashboardController::class, 'analytics'])->name('tire.reports.analytics');
-            Route::get('/tire-life', [TireInventoryController::class, 'tireLifeReport'])->name('tire.reports.tire-life');
-            Route::get('/usage-stats', [VehicleAllocationController::class, 'usageStatistics'])->name('tire.reports.usage');
-            Route::get('/cost-analysis', [RefillingController::class, 'costAnalysis'])->name('tire.reports.cost');
-            Route::post('/custom-range', [TireDashboardController::class, 'customRangeReport'])->name('tire.reports.custom-range');
+            Route::get('/analytics', [TyreDashboardController::class, 'analytics'])->name('tyre.reports.analytics');
+            Route::get('/tyre-life', [TyreInventoryController::class, 'tyreLifeReport'])->name('tyre.reports.tyre-life');
+            Route::get('/usage-stats', [VehicleAllocationController::class, 'usageStatistics'])->name('tyre.reports.usage');
+            Route::get('/cost-analysis', [RefillingController::class, 'costAnalysis'])->name('tyre.reports.cost');
+            Route::post('/custom-range', [TyreDashboardController::class, 'customRangeReport'])->name('tyre.reports.custom-range');
         });
         
         // ============================================
         // API Routes for AJAX functionality
         // ============================================
         Route::prefix('api')->group(function () {
-            Route::get('/tire/by-serial/{serialNumber}', [TireInventoryController::class, 'getBySerialNumber'])->name('tire.api.by-serial');
-            Route::get('/available-tires', [TireInventoryController::class, 'getAvailableTires'])->name('tire.api.available-tires');
-            Route::get('/vehicle/{vehicleId}/current-tires', [VehicleAllocationController::class, 'getCurrentTiresApi'])->name('tire.api.vehicle-tires');
-            Route::post('/validate-serial', [TireInventoryController::class, 'validateSerialNumber'])->name('tire.api.validate-serial');
-            Route::get('/tire/{tireId}/summary', [TireInventoryController::class, 'getLifecycleSummary'])->name('tire.api.lifecycle-summary');
-            Route::get('/monthly-activity', [TireDashboardController::class, 'getMonthlyActivity'])->name('tire.api.monthly-activity');
+            Route::get('/tyre/by-serial/{serialNumber}', [TyreInventoryController::class, 'getBySerialNumber'])->name('tyre.api.by-serial');
+            Route::get('/available-tyres', [TyreInventoryController::class, 'getAvailableTyres'])->name('tyre.api.available-tyres');
+            Route::get('/vehicle/{vehicleId}/current-tyres', [VehicleAllocationController::class, 'getCurrentTyresApi'])->name('tyre.api.vehicle-tyres');
+            Route::post('/validate-serial', [TyreInventoryController::class, 'validateSerialNumber'])->name('tyre.api.validate-serial');
+            Route::get('/tyre/{tyreId}/summary', [TyreInventoryController::class, 'getLifecycleSummary'])->name('tyre.api.lifecycle-summary');
+            Route::get('/monthly-activity', [TyreDashboardController::class, 'getMonthlyActivity'])->name('tyre.api.monthly-activity');
         });
     });
 });

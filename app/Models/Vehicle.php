@@ -13,19 +13,20 @@ class Vehicle extends Model
         'lorry_number', 'driver_name', 'driver_contact', 'current_mileage', 'status'
     ];
 
-    public function tireAllocations()
+    public function tyreAllocations()
     {
-        return $this->hasMany(TireAllocation::class);
+        return $this->hasMany(TyreAllocation::class, 'vehicle_id');
     }
 
-    public function currentTires()
+    public function currentTyres()
     {
-        return $this->belongsToMany(Tire::class, 'tire_allocations')
+        return $this->belongsToMany(Tyre::class, 'tire_allocations', 'vehicle_id', 'tire_id')
                     ->whereNull('tire_allocations.removal_date')
                     ->withPivot('mileage_at_installation', 'position');
     }
-    public function tireIssueNotes()
-{
-    return $this->hasMany(TireIssueNote::class);
-}
+    
+    public function tyreIssueNotes()
+    {
+        return $this->hasMany(TyreIssueNote::class, 'vehicle_id');
+    }
 }
