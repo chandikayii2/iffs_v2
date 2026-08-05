@@ -221,7 +221,7 @@
     <div class="main-container container">
         <div class="row justify-content-center text-center">
             <div class="col-12 logo-wrapper">
-                <!-- <img src="{{ asset('assets/admin/img/logo.png') }}" class="logo-img" alt="IFFS Logo"> -->
+                <img src="{{ asset('assets/admin/img/ilogo.jpg') }}" class="logo-img" alt="IFFS Logo">
             </div>
             <div class="col-12">
                 <h1 class="welcome-title">Welcome to IFFS Suite</h1>

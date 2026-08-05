@@ -421,65 +421,119 @@
                     <ul>
                         <li class="menu-title">Tyre Management</li>
                         
-                        <li class="{{ request()->routeIs('tyre.dashboard') ? 'active' : '' }}">
-                            <a href="{{ route('tyre.dashboard') }}">
-                                <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
-                            </a>
-                        </li>
-                        
-                        <!-- Tyre Inventory Dropdown -->
-                        <li class="submenu {{ request()->routeIs('tyre.inventory.*') || request()->routeIs('tyre.issue.*') ? 'active' : '' }}">
-                            <a href="javascript:void(0);">
-                                <i class="fas fa-warehouse"></i> <span>Tyre Inventory</span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul>
-                                <li class="{{ request()->routeIs('tyre.inventory.index') || request()->routeIs('tyre.inventory.edit') || request()->routeIs('tyre.inventory.show') ? 'active' : '' }}">
-                                    <a href="{{ route('tyre.inventory.index') }}">
-                                       Tyre Inventory
-                                    </a>
-                                </li>
-                                <li class="{{ request()->routeIs('tyre.inventory.create') || request()->routeIs('tyre.inventory.create') || request()->routeIs('tyre.inventory.edit') || request()->routeIs('tyre.inventory.show') ? 'active' : '' }}">
-                                    <a href="{{ route('tyre.inventory.create') }}">
-                                        Add Tyre
-                                    </a>
-                                </li>
-                                <li class="{{ request()->routeIs('tyre.issue.create') ? 'active' : '' }}">
-                                    <a href="{{ route('tyre.issue.create') }}">
-                                        Issue Tyre
-                                    </a>
-                                </li>
-                                <li class="{{ request()->routeIs('tyre.issue.index') ? 'active' : '' }}">
-                                    <a href="{{ route('tyre.issue.index') }}">
-                                        Issue Tyre List
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        
-                        <li class="{{ request()->routeIs('tyre.vehicles.*') ? 'active' : '' }}">
-                            <a href="{{ route('tyre.vehicles.index') }}">
-                                <i class="fas fa-truck"></i> <span>Vehicles</span>
-                            </a>
-                        </li>
-                        
-                        <li class="{{ request()->routeIs('tyre.refilling.index') ? 'active' : '' }}">
-                            <a href="{{ route('tyre.refilling.index') }}">
-                                <i class="fas fa-sync-alt"></i> <span>Refilling Orders</span>
-                            </a>
-                        </li>
-                        
-                        <li class="{{ request()->routeIs('tyre.refilling.vendors.manage') ? 'active' : '' }}">
-                            <a href="{{ route('tyre.refilling.vendors.manage') }}">
-                                <i class="fas fa-building"></i> <span>Manage Vendors</span>
-                            </a>
-                        </li>
-                        
-                        <li class="{{ request()->routeIs('tyre.scrap.*') ? 'active' : '' }}">
-                            <a href="{{ route('tyre.scrap.index') }}">
-                                <i class="fas fa-trash-alt"></i> <span>Scrap Management</span>
-                            </a>
-                        </li>
+                        @if(isset($getLoginUserPermission))
+                            @if($getLoginUserPermission->contains('slug', 'tyre_dashboard'))
+                            <li class="{{ request()->routeIs('tyre.dashboard') ? 'active' : '' }}">
+                                <a href="{{ route('tyre.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+                                </a>
+                            </li>
+                            @endif
+                            
+                            <!-- Tyre Inventory Dropdown -->
+                            @if($getLoginUserPermission->contains('slug', 'tyre_inventory') || $getLoginUserPermission->contains('slug', 'add_tyre') || $getLoginUserPermission->contains('slug', 'issue_tyre') || $getLoginUserPermission->contains('slug', 'issue_tyre_list'))
+                            <li class="submenu {{ request()->routeIs('tyre.inventory.*') || request()->routeIs('tyre.issue.*') ? 'active' : '' }}">
+                                <a href="javascript:void(0);">
+                                    <i class="fas fa-warehouse"></i> <span>Tyre Inventory</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    @if($getLoginUserPermission->contains('slug', 'tyre_inventory'))
+                                    <li class="{{ request()->routeIs('tyre.inventory.index') || request()->routeIs('tyre.inventory.edit') || request()->routeIs('tyre.inventory.show') ? 'active' : '' }}">
+                                        <a href="{{ route('tyre.inventory.index') }}">
+                                           Tyre Inventory
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($getLoginUserPermission->contains('slug', 'add_tyre'))
+                                    <li class="{{ request()->routeIs('tyre.inventory.create') || request()->routeIs('tyre.inventory.create') || request()->routeIs('tyre.inventory.edit') || request()->routeIs('tyre.inventory.show') ? 'active' : '' }}">
+                                        <a href="{{ route('tyre.inventory.create') }}">
+                                            Add Tyre
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($getLoginUserPermission->contains('slug', 'issue_tyre'))
+                                    <li class="{{ request()->routeIs('tyre.issue.create') ? 'active' : '' }}">
+                                        <a href="{{ route('tyre.issue.create') }}">
+                                            Issue Tyre
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($getLoginUserPermission->contains('slug', 'issue_tyre_list'))
+                                    <li class="{{ request()->routeIs('tyre.issue.index') ? 'active' : '' }}">
+                                        <a href="{{ route('tyre.issue.index') }}">
+                                            Issue Tyre List
+                                        </a>
+                                    </li>
+                                    @endif
+                                </ul>
+                            </li>
+                            @endif
+                            
+                            @if($getLoginUserPermission->contains('slug', 'tyre_vehicles'))
+                            <li class="{{ request()->routeIs('tyre.vehicles.*') ? 'active' : '' }}">
+                                <a href="{{ route('tyre.vehicles.index') }}">
+                                    <i class="fas fa-truck"></i> <span>Vehicles</span>
+                                </a>
+                            </li>
+                            @endif
+                            
+                            @if($getLoginUserPermission->contains('slug', 'tyre_refilling'))
+                            <li class="{{ request()->routeIs('tyre.refilling.index') ? 'active' : '' }}">
+                                <a href="{{ route('tyre.refilling.index') }}">
+                                    <i class="fas fa-sync-alt"></i> <span>Refilling Orders</span>
+                                </a>
+                            </li>
+                            @endif
+                            
+                            @if($getLoginUserPermission->contains('slug', 'tyre_vendors'))
+                            <li class="{{ request()->routeIs('tyre.refilling.vendors.manage') ? 'active' : '' }}">
+                                <a href="{{ route('tyre.refilling.vendors.manage') }}">
+                                    <i class="fas fa-building"></i> <span>Manage Vendors</span>
+                                </a>
+                            </li>
+                            @endif
+                            
+                            @if($getLoginUserPermission->contains('slug', 'tyre_scrap'))
+                            <li class="{{ request()->routeIs('tyre.scrap.*') ? 'active' : '' }}">
+                                <a href="{{ route('tyre.scrap.index') }}">
+                                    <i class="fas fa-trash-alt"></i> <span>Scrap Management</span>
+                                </a>
+                            </li>
+                            @endif
+    
+                            <!-- Users Dropdown (tyre system) -->
+                            @if($getLoginUserPermission->contains('slug', 'tyre_users'))
+                            <li class="submenu {{ request()->routeIs('user-get-all') || request()->routeIs('role-all-get-all') || request()->routeIs('get-all-user-permissions') || request()->routeIs('get-all-user-role-permissions') ? 'active' : '' }}">
+                                <a href="javascript:void(0);">
+                                    <i class="fas fa-users-cog"></i> <span>Users</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    <li class="{{ request()->routeIs('user-get-all') ? 'active' : '' }}">
+                                        <a href="{{ route('user-get-all') }}">
+                                            Users List (tyre system)
+                                        </a>
+                                    </li>
+                                    <li class="{{ request()->routeIs('role-all-get-all') ? 'active' : '' }}">
+                                        <a href="{{ route('role-all-get-all') }}">
+                                            Users Roles(tyre system)
+                                        </a>
+                                    </li>
+                                    <li class="{{ request()->routeIs('get-all-user-permissions') ? 'active' : '' }}">
+                                        <a href="{{ route('get-all-user-permissions') }}">
+                                            Users Permissions (tyre system oparations)
+                                        </a>
+                                    </li>
+                                    <li class="{{ request()->routeIs('get-all-user-role-permissions') ? 'active' : '' }}">
+                                        <a href="{{ route('get-all-user-role-permissions') }}">
+                                            User Role Permission (tyre system oparations)
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            @endif
+                        @endif
                         
                         <li class="menu-title">System</li>
                         <li>

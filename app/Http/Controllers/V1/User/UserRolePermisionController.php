@@ -73,10 +73,20 @@ class UserRolePermisionController extends Controller
     {
         $role_id = $attributes->input('select_role');
 
-        // Check if the role permission already exists
-        $existingRole = RolePermission::where('role_id', $role_id)
-            //->whereIn('permission_id', $permissions)
-            ->exists();
+        $query = RolePermission::join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('role_permissions.role_id', $role_id);
+
+        if (session('active_system') === 'tyre') {
+            $query->where(function($q) {
+                $q->where('permissions.slug', 'like', 'tyre_%')
+                  ->orWhereIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+            });
+        } else {
+            $query->where('permissions.slug', 'not like', 'tyre_%')
+                  ->whereNotIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+        }
+
+        $existingRole = $query->exists();
 
         return response()->json(['exists' => $existingRole]);
     }

@@ -57,9 +57,9 @@
                                 @foreach ($user_permissions as $permission)
                                     <div>
                                         <input type="checkbox" class="individual_permission"
-                                            id="permission_{{ $permission->id }}" name="permissions[]"
+                                            id="add_permission_{{ $permission->id }}" name="permissions[]"
                                             value="{{ $permission->id }}" style="display: inline-block;">&nbsp;
-                                        <label for="permission_{{ $permission->id }}"
+                                        <label for="add_permission_{{ $permission->id }}"
                                             style="display: inline-block; vertical-align: middle;">{{ $permission->name }}</label>
                                     </div>
                                 @endforeach
@@ -101,10 +101,10 @@
                                 <label style="font-size: 16px; font-weight:bold;">Select Permissions</label>
                                 @foreach ($user_permissions as $permission)
                                     <div>
-                                        <input type="checkbox" id="permission_{{ $permission->id }}"
+                                        <input type="checkbox" id="edit_permission_{{ $permission->id }}"
                                             name="permissions[]" class="check_edit" value="{{ $permission->id }}"
                                             style="display: inline-block;">&nbsp;
-                                        <label for="permission_{{ $permission->id }}"
+                                        <label for="edit_permission_{{ $permission->id }}"
                                             style="display: inline-block; vertical-align: middle;">{{ $permission->name }}</label>
                                     </div>
                                 @endforeach
@@ -256,16 +256,16 @@
             url: "/admin/users/role_permission/edit/" + role_id,
             cache: false,
             success: function(data) {
-                let d = data.data[0];
-                console.log(d.role_name);
-                $("#role_name").text(d.role_name);
-                $("#role_id").val(d.role_id);
+                let role = data.data;
+                console.log(role.role_name);
+                $("#role_name").text(role.role_name);
+                $("#role_id").val(role.role_id);
 
 
                 // Loop through the checkboxes and check if they should be checked
                 $('.check_edit').each(function() {
                     var checkboxValue = $(this).val();
-                    if (data.data.some(permission => permission.permission_id ==
+                    if (role.permissions.some(permission => permission.permission_id ==
                             checkboxValue)) {
                         $(this).prop('checked', true);
                     } else {

@@ -89,7 +89,7 @@
                             <a class="dropdown-item" href="{{ url('logout') }}"><i class="me-2"
                                     data-feather="settings"></i>Logout</a>
                             <a class="dropdown-item" href="{{ route('welcome') }}">
-                                <i class="fas fa-exchange-alt"></i> Switch to IFFS
+                                <i class="fas fa-exchange-alt"></i> Switch to Tyre System
                             </a>
                         </div>
                     </div>

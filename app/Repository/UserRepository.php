@@ -50,7 +50,17 @@ class UserRepository implements UserRepositoryInterface
 
     public function getAllUserPermissions()
     {
-        return Permission::all();
+        $query = Permission::query();
+        if (session('active_system') === 'tyre') {
+            $query->where(function($q) {
+                $q->where('slug', 'like', 'tyre_%')
+                  ->orWhereIn('slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+            });
+        } else {
+            $query->where('slug', 'not like', 'tyre_%')
+                  ->whereNotIn('slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+        }
+        return $query->get();
     }
 
     public function rolePermissionCreate($attributes)
@@ -66,7 +76,9 @@ class UserRepository implements UserRepositoryInterface
                 'role_id' => $role_id,
                 'permission_id' => $permissionId,
                 'created_by' => $userId,
-                'updated_by' => $userId
+                'updated_by' => $userId,
+                'created_at' => now(),
+                'updated_at' => now()
             ];
         }
 
@@ -75,33 +87,79 @@ class UserRepository implements UserRepositoryInterface
 
     public function getAllUserRolePermissions()
     {
-        return RolePermission::join('roles', 'role_permissions.role_id', '=', 'roles.id')
+        $query = RolePermission::join('roles', 'role_permissions.role_id', '=', 'roles.id')
             ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
-            ->select('role_permissions.*', 'roles.role_name', 'permissions.name')
-            ->get();
+            ->select('role_permissions.*', 'roles.role_name', 'permissions.name', 'permissions.slug');
+
+        if (session('active_system') === 'tyre') {
+            $query->where(function($q) {
+                $q->where('permissions.slug', 'like', 'tyre_%')
+                  ->orWhereIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+            });
+        } else {
+            $query->where('permissions.slug', 'not like', 'tyre_%')
+                  ->whereNotIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+        }
+
+        return $query->get();
     }
 
     public function editRolePermission($role_id)
     {
-        return RolePermission::join('roles', 'role_permissions.role_id', '=', 'roles.id')
-            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
-            ->select('role_permissions.*', 'roles.role_name', 'permissions.name')
-            ->where('roles.id', $role_id)
-            ->get();
+        $role = Role::find($role_id);
+        if (!$role) {
+            return null;
+        }
+
+        $query = RolePermission::join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('role_permissions.role_id', $role_id)
+            ->select('role_permissions.permission_id', 'permissions.slug');
+
+        if (session('active_system') === 'tyre') {
+            $query->where(function($q) {
+                $q->where('permissions.slug', 'like', 'tyre_%')
+                  ->orWhereIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+            });
+        } else {
+            $query->where('permissions.slug', 'not like', 'tyre_%')
+                  ->whereNotIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+        }
+
+        $assignedPermissions = $query->get();
+
+        return [
+            'role_id' => $role->id,
+            'role_name' => $role->role_name,
+            'permissions' => $assignedPermissions
+        ];
     }
 
 
     public function updateRolePermission($attributes, $role_id)
     {
-        $permissions = $attributes['permissions'];
+        $permissions = $attributes['permissions'] ?? [];
         $userId = $attributes['updated_by'];
 
-        // Step 1: Retrieve existing role permissions related to the provided role ID
-        $existingRolePermissions = RolePermission::where('role_id', $role_id)->get();
+        // Step 1: Retrieve existing role permissions of the active system related to the provided role ID
+        $query = RolePermission::where('role_permissions.role_id', $role_id)
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->select('role_permissions.*', 'permissions.slug');
 
-        // Step 2: Delete existing role permissions
+        if (session('active_system') === 'tyre') {
+            $query->where(function($q) {
+                $q->where('permissions.slug', 'like', 'tyre_%')
+                  ->orWhereIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+            });
+        } else {
+            $query->where('permissions.slug', 'not like', 'tyre_%')
+                  ->whereNotIn('permissions.slug', ['add_tyre', 'issue_tyre', 'issue_tyre_list']);
+        }
+
+        $existingRolePermissions = $query->get();
+
+        // Step 2: Delete these specific existing role permissions
         foreach ($existingRolePermissions as $existingRolePermission) {
-            $existingRolePermission->delete();
+            RolePermission::where('id', $existingRolePermission->id)->delete();
         }
 
         // Step 3: Insert new role permissions
@@ -111,10 +169,14 @@ class UserRepository implements UserRepositoryInterface
                 'role_id' => $role_id,
                 'permission_id' => $permissionId,
                 'created_by' => $userId,
-                'updated_by' => $userId
+                'updated_by' => $userId,
+                'created_at' => now(),
+                'updated_at' => now()
             ];
         }
 
-        RolePermission::insert($rolePermissions);
+        if (!empty($rolePermissions)) {
+            RolePermission::insert($rolePermissions);
+        }
     }
 }
