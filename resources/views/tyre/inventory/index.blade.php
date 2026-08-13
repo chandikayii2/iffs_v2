@@ -4,9 +4,11 @@
 <style>
     .action-buttons {
         display: inline-flex !important;
-        gap: 5px;
+        gap: 0px !important;
+        flex-wrap: nowrap !important;
         align-items: center;
     }
+    
     .table td {
         vertical-align: middle;
     }
@@ -222,6 +224,15 @@
             grid-template-columns: repeat(2, 1fr);
         }
     }
+    
+    .action-btn-delete {
+        background: rgba(231, 76, 60, 0.15) !important;
+        color: #e74c3c !important;
+    }
+    .action-btn-delete:hover {
+        background: #e74c3c !important;
+        color: white !important;
+    }
 </style>
 
 @section('content')
@@ -430,9 +441,15 @@
                                                 $locationText = 'In Stock';
                                             }
                                         } elseif($tyre->status == 'new') {
-                                            $locationIcon = 'fa-box';
-                                            $locationClass = 'location-store';
-                                            $locationText = 'New Stock';
+                                            if ($tyre->tire_type === 'original_casing') {
+                                                $locationIcon = 'fa-box';
+                                                $locationClass = 'location-store';
+                                                $locationText = 'Used Casing Stock';
+                                            } else {
+                                                $locationIcon = 'fa-box';
+                                                $locationClass = 'location-store';
+                                                $locationText = 'New Stock';
+                                            }
                                         } else {
                                             $locationText = ucfirst(str_replace('_', ' ', $tyre->current_location ?? 'Unknown'));
                                         }
@@ -465,6 +482,13 @@
                                         @if($tyre->status != 'scrap')
                                         <button type="button" class="action-btn action-btn-scrap" title="Scrap Tyre" onclick="scrapTyre({{ $tyre->id }})">
                                             <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                        @endif
+                                        
+                                        <!-- Delete Button -->
+                                        @if(!in_array($tyre->status, ['in_use', 'at_vendor']))
+                                        <button type="button" class="action-btn action-btn-delete" title="Delete Tyre" onclick="deleteTyre({{ $tyre->id }}, '{{ $tyre->serial_number }}')">
+                                            <i class="fas fa-times"></i>
                                         </button>
                                         @endif
                                     </div>
@@ -589,6 +613,56 @@
         }).then((result) => {
             if (result.isConfirmed && result.value) {
                 submitScrap(tyreId, result.value);
+            }
+        });
+    }
+
+    function deleteTyre(tyreId, serialNumber) {
+        Swal.fire({
+            title: 'Delete Tyre',
+            text: 'Are you sure you want to permanently delete tyre "' + serialNumber + '"? This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74c3c',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                $.ajax({
+                    url: '{{ route("tyre.inventory.delete", "") }}/' + tyreId,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        Swal.close();
+                        if (response.status == 200) {
+                            Swal.fire('Deleted!', response.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.close();
+                        let errorMsg = 'Failed to delete tyre';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire('Error', errorMsg, 'error');
+                    }
+                });
             }
         });
     }

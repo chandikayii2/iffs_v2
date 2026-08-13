@@ -17,9 +17,12 @@ class TyreDashboardController extends Controller
     {
         $stats = [
             'total_tyres' => Tyre::count(),
-            'new_tyres' => Tyre::where('status', 'new')->count(),
+            'new_tyres' => Tyre::where('status', 'new')->where('tire_type', '!=', 'original_casing')->count(),
             'in_use_tyres' => Tyre::where('status', 'in_use')->count(),
-            'new_dag_tyres' => Tyre::where('status', 'used')->where('is_refilled', true)->count(),
+            'new_dag_tyres' => Tyre::where(function($q) {
+                $q->where('status', 'used')->where('is_refilled', true)
+                  ->orWhere('tire_type', 'original_casing');
+            })->count(),
             'can_use_as_it_is' => Tyre::where('status', 'used')->where('is_refilled', false)->count(),
             'to_be_send_to_dag' => Tyre::where('status', 'at_vendor')->count(),
             'scrap_tyres' => Tyre::where('status', 'scrap')->count(),
@@ -173,12 +176,16 @@ class TyreDashboardController extends Controller
         
         switch ($type) {
             case 'new':
-                $query->where('status', 'new');
+                $query->where('status', 'new')->where('tire_type', '!=', 'original_casing');
                 $title = 'New Tyres List';
                 $description = 'View and manage brand new tyres in inventory';
                 break;
             case 'new_dag':
-                $query->where('status', 'used')->where('is_refilled', true);
+                $query->where(function($q) {
+                    $q->where(function($sub) {
+                        $sub->where('status', 'used')->where('is_refilled', true);
+                    })->orWhere('tire_type', 'original_casing');
+                });
                 $title = 'New Dag Tyres List';
                 $description = 'View and manage refilled (retreaded) tyres in inventory';
                 break;

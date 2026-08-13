@@ -176,7 +176,7 @@ public function index(Request $request)
                     'purchase_price' => $request->purchase_price,
                     'notes' => $request->notes,
                     'vendor_id' => $request->vendor_id,
-                    'consumption_mileage' => 0
+                    'consumption_mileage' => $roundKms ? array_sum($roundKms) : 0
                 ]);
             }
 
@@ -220,33 +220,69 @@ public function update(Request $request, $id)
 {
     $tyre = Tyre::findOrFail($id);
     
-    $validator = Validator::make($request->all(), [
+    $rules = [
         'serial_number' => 'required|unique:tires,serial_number,' . $id,
         'brand' => 'required|string',
         'size' => 'required|string',
         'type' => 'required|string',
-        'max_refills' => 'required|integer|min:' . $tyre->refill_count . '|max:20',
         'purchase_date' => 'required|date',
         'purchase_price' => 'required|numeric|min:0',
-        'consumption_mileage' => 'nullable|integer|min:0',
         'notes' => 'nullable|string',
-        'vendor_id' => 'nullable|exists:refilling_vendors,id'
-    ]);
+        'vendor_id' => 'nullable|exists:refilling_vendors,id',
+        'tyre_config' => 'required|string|in:original,original_casing,dag_used'
+    ];
+
+    if ($request->input('tyre_config') === 'dag_used') {
+        $rules['total_refill_count'] = 'required|integer|min:0';
+        $rules['rounds_finished'] = 'required|integer|min:0';
+    } else {
+        $rules['max_refills'] = 'required|integer|min:' . $tyre->refill_count . '|max:20';
+        $rules['consumption_mileage'] = 'nullable|integer|min:0';
+    }
+
+    $validator = Validator::make($request->all(), $rules);
 
     if ($validator->fails()) {
         return redirect()->back()->withErrors($validator)->withInput();
     }
 
     try {
+        $tyreConfig = $request->input('tyre_config', 'original');
+        $isRefilled = ($tyreConfig === 'dag_used');
+        $status = $tyre->status;
+        if (in_array($status, ['new', 'used'])) {
+            $status = $isRefilled ? 'used' : 'new';
+        }
+        
+        $totalRefillCount = $isRefilled ? (int)$request->input('total_refill_count', 0) : (int)$request->input('max_refills', 0);
+        $roundsFinished = $isRefilled ? (int)$request->input('rounds_finished', 0) : 0;
+        $roundKms = null;
+        $consumptionMileage = (int)$request->input('consumption_mileage', 0);
+
+        if ($isRefilled) {
+            $roundKms = [];
+            for ($i = 1; $i <= $roundsFinished; $i++) {
+                $roundKms[(string)$i] = (int)$request->input("round_{$i}_km", 0);
+            }
+            $consumptionMileage = array_sum($roundKms);
+        }
+
         $tyre->update([
             'serial_number' => $request->serial_number,
             'brand' => $request->brand,
             'size' => $request->size,
             'type' => $request->type,
-            'max_refills' => $request->max_refills,
+            'status' => $status,
+            'refill_count' => $isRefilled ? $roundsFinished : $tyre->refill_count,
+            'total_refill_count' => $isRefilled ? $roundsFinished : $tyre->total_refill_count,
+            'rounds_finished' => $roundsFinished,
+            'round_kms' => $roundKms,
+            'tire_type' => $tyreConfig,
+            'is_refilled' => $isRefilled,
+            'max_refills' => $totalRefillCount,
             'purchase_date' => $request->purchase_date,
             'purchase_price' => $request->purchase_price,
-            'consumption_mileage' => $request->consumption_mileage ?? 0,
+            'consumption_mileage' => $consumptionMileage,
             'notes' => $request->notes,
             'vendor_id' => $request->vendor_id
         ]);
@@ -261,16 +297,26 @@ public function update(Request $request, $id)
     public function delete($id)
     {
         try {
+            DB::beginTransaction();
             $tyre = Tyre::findOrFail($id);
             
-            if (!in_array($tyre->status, ['new', 'scrap'])) {
+            if (in_array($tyre->status, ['in_use', 'at_vendor'])) {
+                DB::rollBack();
                 return response()->json([
                     'status' => 400, 
                     'message' => 'Cannot delete tyre that is in use or at vendor!'
                 ]);
             }
             
+            // Manually delete related records to bypass missing cascade foreign keys in live database
+            DB::table('tire_allocations')->where('tire_id', $id)->delete();
+            DB::table('refilling_order_items')->where('tire_id', $id)->delete();
+            DB::table('tire_scrap_records')->where('tire_id', $id)->delete();
+            DB::table('tire_issue_note_items')->where('tire_id', $id)->delete();
+            
             $tyre->delete();
+            
+            DB::commit();
             
             return response()->json([
                 'status' => 200, 
@@ -278,6 +324,7 @@ public function update(Request $request, $id)
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => 500, 
                 'message' => 'Failed to delete tyre: ' . $e->getMessage()

@@ -122,6 +122,58 @@
                     </div>
                 </div>
 
+                <!-- Tyre Configuration (Radio Buttons) -->
+                <div class="col-12 mb-4 mt-3">
+                    <label class="form-label fw-bold">Tyre Configuration <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-4 flex-wrap">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tyre_config" id="chkb1" value="original" {{ (old('tyre_config', $tyre->tire_type ?? 'original') === 'original') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="chkb1">
+                                <strong>Original Tyre</strong> <span class="text-muted">(Brand new, never refilled)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tyre_config" id="chkb2" value="original_casing" {{ (old('tyre_config', $tyre->tire_type ?? 'original') === 'original_casing') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="chkb2">
+                                <strong>Use Original Casing</strong> <span class="text-muted">(Tyre using original casing)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tyre_config" id="chkb3" value="dag_used" {{ (old('tyre_config', $tyre->tire_type ?? 'original') === 'dag_used') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="chkb3">
+                                <strong>Dag Used</strong> <span class="text-muted">(Refilled tyre with history)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dag Used Fields (Conditionally Shown) -->
+                <div class="col-12" id="dagUsedFields" style="display: none;">
+                    <div class="border p-3 rounded mb-4 bg-light">
+                        <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-history me-2"></i>Dag Used History Information</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Total Refill Count</label>
+                                    <input type="number" name="total_refill_count" id="total_refill_count" class="form-control" value="{{ old('total_refill_count', $tyre->max_refills) }}" min="0">
+                                    <small class="text-muted">Total number of refills done</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Rounds Finished</label>
+                                    <input type="number" name="rounds_finished" id="rounds_finished" class="form-control" value="{{ old('rounds_finished', $tyre->rounds_finished ?? 0) }}" min="0">
+                                    <small class="text-muted">How many rounds completed</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="roundKmsInputsContainer">
+                            <!-- Dynamic R_ KM Consumed fields will be appended here by JS -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Vendor -->
                 <div class="col-lg-6 col-sm-12">
                     <div class="form-group">
@@ -144,7 +196,7 @@
                 </div>
 
                 <!-- Max Refills -->
-                <div class="col-lg-6 col-sm-12">
+                <div class="col-lg-6 col-sm-12" id="maxRefillsContainer">
                     <div class="form-group">
                         <label>Max Refills</label>
                         <input type="number" name="max_refills" id="max_refills" class="form-control" 
@@ -192,7 +244,7 @@
                 </div>
 
                 <!-- Consumed Mileage - Now Editable -->
-                <div class="col-lg-12">
+                <div class="col-lg-12" id="consumptionMileageContainer">
                     <div class="form-group">
                         <label>Consumed Mileage (km)</label>
                         <input type="number" name="consumption_mileage" id="consumption_mileage" 
@@ -350,22 +402,122 @@
             width: '100%'
         });
 
+        // Retrieve initial round kms from tyre object
+        var initialRoundKms = {!! json_encode($tyre->round_kms ?? new \stdClass()) !!};
+
+        function updateRoundKmsVisibility() {
+            var rounds = parseInt($('#rounds_finished').val()) || 0;
+            var container = $('#roundKmsInputsContainer');
+            
+            // Get current inputs values so we don't lose typed data
+            var currentValues = {};
+            container.find('input').each(function() {
+                var name = $(this).attr('name');
+                currentValues[name] = $(this).val();
+            });
+            
+            container.empty();
+            for (var i = 1; i <= rounds; i++) {
+                var name = 'round_' + i + '_km';
+                var val = currentValues[name] !== undefined ? currentValues[name] : 
+                          (initialRoundKms[i] !== undefined ? initialRoundKms[i] : '0');
+                
+                var html = `
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-nowrap">R${i} KM Consumed</label>
+                        <input type="number" name="${name}" class="form-control round-km-input" value="${val}" min="0">
+                    </div>
+                `;
+                container.append(html);
+            }
+            updateTotalConsumptionMileage();
+        }
+
+        function updateTotalConsumptionMileage() {
+            if ($('input[name="tyre_config"]:checked').val() === 'dag_used') {
+                var total = 0;
+                $('.round-km-input').each(function() {
+                    total += parseInt($(this).val()) || 0;
+                });
+                $('#consumption_mileage').val(total).attr('readonly', 'readonly');
+            } else {
+                $('#consumption_mileage').removeAttr('readonly');
+            }
+        }
+
+        $('#rounds_finished').on('input change', function() {
+            updateRoundKmsVisibility();
+        });
+
+        // Event listener for dynamic round inputs to update consumption mileage in real time
+        $(document).on('input change', '.round-km-input', function() {
+            updateTotalConsumptionMileage();
+        });
+
+        // Synchronize Total Refill Count and Max Refills in Dag Used config
+        $('#total_refill_count').on('input change', function() {
+            if ($('input[name="tyre_config"]:checked').val() === 'dag_used') {
+                $('#max_refills').val($(this).val());
+            }
+        });
+        $('#max_refills').on('input change', function() {
+            if ($('input[name="tyre_config"]:checked').val() === 'dag_used') {
+                $('#total_refill_count').val($(this).val());
+            }
+        });
+
+        // Toggle Tyre Config / Dag Used Fields
+        $('input[name="tyre_config"]').on('change', function() {
+            if ($(this).val() === 'dag_used') {
+                $('#dagUsedFields').slideDown();
+                $('#total_refill_count, #rounds_finished').attr('required', 'required');
+                
+                // Hide Max Refills container
+                $('#maxRefillsContainer').hide();
+                
+                // Synchronize values on toggle
+                $('#max_refills').val($('#total_refill_count').val());
+                updateRoundKmsVisibility();
+            } else {
+                $('#dagUsedFields').slideUp();
+                $('#total_refill_count, #rounds_finished').removeAttr('required');
+                
+                // Show Max Refills container
+                $('#maxRefillsContainer').show();
+                updateTotalConsumptionMileage();
+            }
+        });
+
+        // Run on initial load to match saved config
+        if ($('input[name="tyre_config"]:checked').val() === 'dag_used') {
+            $('#dagUsedFields').show();
+            $('#maxRefillsContainer').hide();
+            $('#max_refills').val($('#total_refill_count').val());
+            updateRoundKmsVisibility();
+        } else {
+            $('#maxRefillsContainer').show();
+            updateTotalConsumptionMileage();
+        }
+
         // Validate max_refills on form submit
         $('#editTyreForm').on('submit', function(e) {
-            var maxRefills = parseInt($('#max_refills').val());
-            var currentRefillCount = parseInt('{{ $tyre->refill_count }}');
-            
-            if (maxRefills < currentRefillCount) {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'Invalid Max Refills',
-                    text: 'Max refills cannot be less than current refill count (' + currentRefillCount + '). Please set a value of ' + currentRefillCount + ' or higher.',
-                    icon: 'error',
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'OK'
-                });
-                $('#max_refills').focus();
-                return false;
+            // Only validate max_refills if not dag_used
+            if ($('input[name="tyre_config"]:checked').val() !== 'dag_used') {
+                var maxRefills = parseInt($('#max_refills').val());
+                var currentRefillCount = parseInt('{{ $tyre->refill_count }}');
+                
+                if (maxRefills < currentRefillCount) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Invalid Max Refills',
+                        text: 'Max refills cannot be less than current refill count (' + currentRefillCount + '). Please set a value of ' + currentRefillCount + ' or higher.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'OK'
+                    });
+                    $('#max_refills').focus();
+                    return false;
+                }
             }
             return true;
         });
