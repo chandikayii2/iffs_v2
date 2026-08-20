@@ -171,7 +171,9 @@ Route::prefix('issue')->group(function () {
         // ============================================
         Route::get('/dashboard', [TyreDashboardController::class, 'index'])->name('tyre.dashboard');
         Route::get('/breakdown', [TyreDashboardController::class, 'breakdown'])->name('tyre.breakdown');
+        Route::get('/breakdown/pdf', [TyreDashboardController::class, 'breakdownPdf'])->name('tyre.breakdown.pdf');
         Route::get('/category/{type}', [TyreDashboardController::class, 'categoryTyres'])->name('tyre.category.list');
+        Route::get('/category/{type}/pdf', [TyreDashboardController::class, 'categoryPdf'])->name('tyre.category.pdf');
         Route::get('/dashboard/stats', [TyreDashboardController::class, 'getStats'])->name('tyre.dashboard.stats');
         Route::get('/alerts', [TyreDashboardController::class, 'getAlerts'])->name('tyre.alerts');
         

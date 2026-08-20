@@ -8,6 +8,7 @@ use App\Models\TyreScrapRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use PDF;
 
 class TyreScrapController extends Controller
 {
@@ -47,7 +48,8 @@ class TyreScrapController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
             
-        return view('tyre.scrap.pdf', compact('scrapTyres', 'category'));
+        $pdf = PDF::loadView('tyre.scrap.pdf', compact('scrapTyres', 'category'));
+        return $pdf->download('scrapped_tyres_' . $category . '_' . date('d_m_Y') . '.pdf');
     }
 
     public function scrapTyre($tyreId)

@@ -6,7 +6,10 @@
         <h4><i class="fas fa-circle-notch me-2"></i>{{ $title }}</h4>
         <h6>{{ $description }}</h6>
     </div>
-    <div class="page-btn">
+    <div class="page-btn d-flex align-items-center gap-2">
+        <a href="{{ route('tyre.category.pdf', $type) }}" class="btn btn-danger" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> Download PDF
+        </a>
         <a href="{{ route('tyre.dashboard') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
         </a>
@@ -61,6 +64,8 @@
                             <span class="badge badge-soft-primary">
                                 @if($tyre->status === 'new' && $tyre->tire_type === 'original_casing')
                                     Used Casing Stock
+                                @elseif($tyre->status === 'used' && $tyre->refill_count > 0)
+                                    Available for Use / Stock
                                 @else
                                     {{ $tyre->current_location ?? 'Store' }}
                                 @endif

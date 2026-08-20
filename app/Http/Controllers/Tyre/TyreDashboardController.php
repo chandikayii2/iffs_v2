@@ -10,6 +10,7 @@ use App\Models\TyreAllocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PDF;
 
 class TyreDashboardController extends Controller
 {
@@ -19,12 +20,15 @@ class TyreDashboardController extends Controller
             'total_tyres' => Tyre::count(),
             'new_tyres' => Tyre::where('status', 'new')->where('tire_type', '!=', 'original_casing')->count(),
             'in_use_tyres' => Tyre::where('status', 'in_use')->count(),
-            'new_dag_tyres' => Tyre::where(function($q) {
-                $q->where('status', 'used')->where('is_refilled', true)
-                  ->orWhere('tire_type', 'original_casing');
-            })->count(),
+            'new_dag_tyres' => Tyre::where('status', 'used')->where('is_refilled', true)->count(),
             'can_use_as_it_is' => Tyre::where('status', 'used')->where('is_refilled', false)->count(),
-            'to_be_send_to_dag' => Tyre::where('status', 'at_vendor')->count(),
+            'to_be_send_to_dag' => Tyre::where(function($q) {
+                $q->where('status', 'at_vendor')
+                  ->orWhere(function($sub) {
+                      $sub->where('status', 'new')
+                          ->where('tire_type', 'original_casing');
+                  });
+            })->count(),
             'scrap_tyres' => Tyre::where('status', 'scrap')->count(),
             'active_vehicles' => Vehicle::where('status', 'active')->count(),
             'pending_refilling' => RefillingOrder::where('status', 'sent')->count(),
@@ -181,11 +185,7 @@ class TyreDashboardController extends Controller
                 $description = 'View and manage brand new tyres in inventory';
                 break;
             case 'new_dag':
-                $query->where(function($q) {
-                    $q->where(function($sub) {
-                        $sub->where('status', 'used')->where('is_refilled', true);
-                    })->orWhere('tire_type', 'original_casing');
-                });
+                $query->where('status', 'used')->where('is_refilled', true);
                 $title = 'New Dag Tyres List';
                 $description = 'View and manage refilled (retreaded) tyres in inventory';
                 break;
@@ -195,7 +195,13 @@ class TyreDashboardController extends Controller
                 $description = 'View and manage used tyres ready for immediate allocation (no retread needed)';
                 break;
             case 'at_vendor':
-                $query->where('status', 'at_vendor');
+                $query->where(function($q) {
+                    $q->where('status', 'at_vendor')
+                      ->orWhere(function($sub) {
+                          $sub->where('status', 'new')
+                              ->where('tire_type', 'original_casing');
+                      });
+                });
                 $title = 'To Be Send to Dag Tyres List';
                 $description = 'View and manage tyres currently at vendor for refilling/retreading';
                 break;
@@ -206,5 +212,67 @@ class TyreDashboardController extends Controller
         $tyres = $query->orderBy('created_at', 'desc')->paginate(20);
         
         return view('tyre.category_list', compact('tyres', 'title', 'description', 'type'));
+    }
+
+    public function breakdownPdf()
+    {
+        $maxRefillInDb = Tyre::where('status', '!=', 'scrap')->max('refill_count') ?? 0;
+        $maxRounds = max(5, $maxRefillInDb);
+        
+        $groupedTyres = [];
+        // Brand New (0 refills)
+        $groupedTyres[0] = Tyre::where('refill_count', 0)
+            ->where('status', '!=', 'scrap')
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // Rounds 1 to maxRounds
+        for ($i = 1; $i <= $maxRounds; $i++) {
+            $groupedTyres[$i] = Tyre::where('refill_count', $i)
+                ->where('status', '!=', 'scrap')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+        
+        $pdf = PDF::loadView('tyre.breakdown_pdf', compact('groupedTyres', 'maxRounds'));
+        return $pdf->download('tyre_breakdown_report_' . date('d_m_Y') . '.pdf');
+    }
+
+    public function categoryPdf(Request $request, $type)
+    {
+        $query = Tyre::where('status', '!=', 'scrap');
+        $title = '';
+        
+        switch ($type) {
+            case 'new':
+                $query->where('status', 'new')->where('tire_type', '!=', 'original_casing');
+                $title = 'New Tyres List';
+                break;
+            case 'new_dag':
+                $query->where('status', 'used')->where('is_refilled', true);
+                $title = 'New Dag Tyres List';
+                break;
+            case 'casing':
+                $query->where('status', 'used')->where('is_refilled', false);
+                $title = 'Can Use As It Is Tyres List';
+                break;
+            case 'at_vendor':
+                $query->where(function($q) {
+                    $q->where('status', 'at_vendor')
+                      ->orWhere(function($sub) {
+                          $sub->where('status', 'new')
+                              ->where('tire_type', 'original_casing');
+                      });
+                });
+                $title = 'To Be Send to Dag Tyres List';
+                break;
+            default:
+                abort(404);
+        }
+        
+        $tyres = $query->orderBy('created_at', 'desc')->get();
+        
+        $pdf = PDF::loadView('tyre.category_pdf', compact('tyres', 'title', 'type'));
+        return $pdf->download(str_replace(' ', '_', strtolower($title)) . '_' . date('d_m_Y') . '.pdf');
     }
 }

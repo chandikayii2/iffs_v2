@@ -412,7 +412,7 @@
                                             }
                                             
                                             if($vehicle) {
-                                                $locationText = 'Vehicle: ' . $vehicle->lorry_number;
+                                                $locationText = $vehicle->lorry_number;
                                             } else {
                                                 $locationText = 'In Use';
                                             }
@@ -431,15 +431,15 @@
                                             $locationClass = 'location-scrap';
                                             $locationText = 'Scrap Yard';
                                         } elseif($tyre->status == 'used') {
-                                            if($tyre->refill_count > 0) {
-                                                $locationIcon = 'fa-sync-alt';
-                                                $locationClass = 'location-refilling';
-                                                $locationText = 'Refilled Stock';
-                                            } else {
-                                                $locationIcon = 'fa-warehouse';
-                                                $locationClass = 'location-store';
-                                                $locationText = 'In Stock';
-                                            }
+                                             if($tyre->refill_count > 0) {
+                                                 $locationIcon = 'fa-sync-alt';
+                                                 $locationClass = 'location-refilling';
+                                                 $locationText = 'Available for Use / Stock';
+                                             } else {
+                                                 $locationIcon = 'fa-warehouse';
+                                                 $locationClass = 'location-store';
+                                                 $locationText = 'In Stock';
+                                             }
                                         } elseif($tyre->status == 'new') {
                                             if ($tyre->tire_type === 'original_casing') {
                                                 $locationIcon = 'fa-box';

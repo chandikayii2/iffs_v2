@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scrapped Tyres - {{ ucfirst($category) }}</title>
+    <title>{{ $title }} Report</title>
     <style>
         @page {
             margin: 15mm 15mm 20mm 15mm;
@@ -78,12 +78,40 @@
         .data-table tr:nth-child(even) td {
             background-color: #f9fbfd;
         }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 9px;
+            font-weight: bold;
+            border-radius: 3px;
+            text-transform: capitalize;
+            text-align: center;
+        }
+        .bg-success {
+            background-color: #e8f8f5;
+            color: #27ae60;
+        }
+        .bg-primary {
+            background-color: #ebf5fb;
+            color: #2980b9;
+        }
+        .bg-warning {
+            background-color: #fef9e7;
+            color: #d35400;
+        }
+        .bg-info {
+            background-color: #eaf2f8;
+            color: #2471a3;
+        }
+        .badge-location {
+            background-color: #f2f4f4;
+            color: #7f8c8d;
+        }
         .signature-table {
             width: 100%;
             margin-top: 40px;
             border-collapse: collapse;
             border: none;
-            page-break-inside: avoid;
         }
         .signature-table td {
             border: none;
@@ -145,68 +173,59 @@
     <div class="divider"></div>
     
     <div class="report-title">
-        @if($category === 'store')
-            Scrapped Tyres in Store Report (Total: {{ $scrapTyres->count() }})
-        @elseif($category === 'kurunagala')
-            Scrapped Tyres in Kurunagala Report (Total: {{ $scrapTyres->count() }})
-        @else
-            Sold Scrapped Tyres Report (Total: {{ $scrapTyres->count() }})
-        @endif
+        {{ $title }} (Total: {{ $tyres->count() }})
     </div>
 
     <table class="data-table">
         <thead>
-            @if($category === 'sold')
-                <tr>
-                    <th>Serial Number</th>
-                    <th>Brand</th>
-                    <th>Size</th>
-                    <th>Sold Date</th>
-                    <th>Sale Price</th>
-                    <th>Payment Method</th>
-                    <th>Customer Details</th>
-                </tr>
-            @else
-                <tr>
-                    <th>Serial Number</th>
-                    <th>Brand</th>
-                    <th>Size</th>
-                    <th>Casing Type</th>
-                    <th>Scrap Date</th>
-                    <th>Scrap Reason</th>
-                    <th>Final Mileage</th>
-                </tr>
-            @endif
+            <tr>
+                <th>Serial Number</th>
+                <th>Brand</th>
+                <th>Size</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Current Location</th>
+                <th>Refills Done</th>
+                <th>Max Refills</th>
+            </tr>
         </thead>
         <tbody>
-            @forelse($scrapTyres as $tyre)
-                @if($category === 'sold')
-                    <tr>
-                        <td><strong>{{ $tyre->serial_number }}</strong></td>
-                        <td>{{ $tyre->brand }}</td>
-                        <td>{{ $tyre->size }}</td>
-                        <td>{{ $tyre->scrapRecord && $tyre->scrapRecord->sold_date ? \Carbon\Carbon::parse($tyre->scrapRecord->sold_date)->format('d-m-Y') : 'N/A' }}</td>
-                        <td>Rs.{{ number_format($tyre->scrapRecord->sale_price ?? 0, 2) }}</td>
-                        <td>{{ ucfirst($tyre->scrapRecord->payment_method ?? 'N/A') }}</td>
-                        <td>
-                            <strong>{{ $tyre->scrapRecord->customer_name ?? 'N/A' }}</strong><br>
-                            <span style="font-size: 9px; color: #555;">{{ $tyre->scrapRecord->customer_phone ?? '' }}</span>
-                        </td>
-                    </tr>
-                @else
-                    <tr>
-                        <td><strong>{{ $tyre->serial_number }}</strong></td>
-                        <td>{{ $tyre->brand }}</td>
-                        <td>{{ $tyre->size }}</td>
-                        <td>{{ ucfirst($tyre->type) }}</td>
-                        <td>{{ $tyre->scrapRecord && $tyre->scrapRecord->scrap_date ? \Carbon\Carbon::parse($tyre->scrapRecord->scrap_date)->format('d-m-Y') : 'N/A' }}</td>
-                        <td>{{ $tyre->scrapRecord->scrap_reason ?? 'N/A' }}</td>
-                        <td>{{ number_format($tyre->scrapRecord->final_mileage ?? 0) }} km</td>
-                    </tr>
-                @endif
+            @forelse($tyres as $tyre)
+                <tr>
+                    <td><strong>{{ $tyre->serial_number }}</strong></td>
+                    <td>{{ $tyre->brand }}</td>
+                    <td>{{ $tyre->size }}</td>
+                    <td>{{ ucfirst($tyre->type) }}</td>
+                    <td>
+                        @if($tyre->status === 'new')
+                            <span class="badge bg-success">New</span>
+                        @elseif($tyre->status === 'in_use')
+                            <span class="badge bg-primary">In Use</span>
+                        @elseif($tyre->status === 'used')
+                            <span class="badge bg-warning">Used</span>
+                        @elseif($tyre->status === 'at_vendor')
+                            <span class="badge bg-info">At Vendor</span>
+                        @else
+                            <span class="badge badge-location">{{ ucfirst($tyre->status) }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        <span class="badge badge-location">
+                            @if($tyre->status === 'new' && $tyre->tire_type === 'original_casing')
+                                Used Casing Stock
+                            @elseif($tyre->status === 'used' && $tyre->refill_count > 0)
+                                Available for Use / Stock
+                            @else
+                                {{ $tyre->current_location ?? 'Store' }}
+                            @endif
+                        </span>
+                    </td>
+                    <td>{{ $tyre->refill_count }}</td>
+                    <td>{{ $tyre->max_refills }}</td>
+                </tr>
             @empty
                 <tr>
-                    <td colspan="{{ $category === 'sold' ? 7 : 7 }}" style="text-align: center; color: #7f8c8d; padding: 20px 0;">No tyres found in this category.</td>
+                    <td colspan="8" style="text-align: center; color: #7f8c8d; padding: 20px 0;">No tyres found in this category.</td>
                 </tr>
             @endforelse
         </tbody>

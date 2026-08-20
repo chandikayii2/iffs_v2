@@ -6,7 +6,10 @@
         <h4><i class="fas fa-chart-pie me-2"></i>Tyres Subcategory Breakdown</h4>
         <h6>Round-by-round casing and retread status overview</h6>
     </div>
-    <div class="page-btn">
+    <div class="page-btn d-flex align-items-center gap-2">
+        <a href="{{ route('tyre.breakdown.pdf') }}" class="btn btn-danger" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> Download PDF
+        </a>
         <a href="{{ route('tyre.dashboard') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
         </a>
