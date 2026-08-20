@@ -98,7 +98,7 @@
                         </td>
                         <td>
                             <span class="badge badge-soft-primary">
-                                {{ $tyre->current_location ?? 'Store' }}
+                                {{ $tyre->getLocationText() }}
                             </span>
                         </td>
                         <td>{{ $tyre->max_refills }}</td>

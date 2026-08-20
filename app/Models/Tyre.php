@@ -69,4 +69,46 @@ public function allocations()
         return $this->consumption_mileage ?? 0;
     }
     
+    public function getLocationText()
+    {
+        if ($this->status === 'in_use') {
+            $allocation = $this->currentAllocation;
+            if ($allocation && $allocation->vehicle) {
+                return $allocation->vehicle->lorry_number;
+            }
+            // Fallback check allocations relation
+            $fallback = $this->allocations()->whereNull('removal_date')->with('vehicle')->first();
+            if ($fallback && $fallback->vehicle) {
+                return $fallback->vehicle->lorry_number;
+            }
+            return 'In Use';
+        }
+        
+        if ($this->status === 'at_vendor') {
+            if (in_array($this->current_location, ['store', 'pending_refill'])) {
+                return 'To Be Send to Dag';
+            }
+            return 'Refilling';
+        }
+        
+        if ($this->status === 'new') {
+            if ($this->tire_type === 'original_casing') {
+                return 'Used Casing Stock';
+            }
+            return 'New Stock';
+        }
+        
+        if ($this->status === 'used') {
+            if ($this->refill_count > 0) {
+                return 'Available for Use / Stock';
+            }
+            return 'In Stock';
+        }
+        
+        if ($this->status === 'scrap') {
+            return 'Scrap Yard';
+        }
+        
+        return ucfirst(str_replace('_', ' ', $this->current_location ?? 'Store'));
+    }
 }

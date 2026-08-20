@@ -170,7 +170,7 @@
         <tr>
             <td style="width: 50%;">
                 <div class="logo-title">
-                    <h1>IFFS LOGISTICS</h1>
+                    <h1>IFFS TRANSPORT</h1>
                     <p>Tyre Management System</p>
                 </div>
             </td>
@@ -248,13 +248,7 @@
                                 </td>
                                 <td>
                                     <span class="badge badge-location">
-                                        @if($tyre->status === 'new' && $tyre->tire_type === 'original_casing')
-                                            Used Casing Stock
-                                        @elseif($tyre->status === 'used' && $tyre->refill_count > 0)
-                                            Available for Use / Stock
-                                        @else
-                                            {{ $tyre->current_location ?? 'Store' }}
-                                        @endif
+                                        {{ $tyre->getLocationText() }}
                                     </span>
                                 </td>
                                 <td>{{ $tyre->max_refills }}</td>
@@ -289,7 +283,7 @@
     <div class="footer">
         <table class="footer-table">
             <tr>
-                <td style="width: 50%;">IFFS Logistics - Confidential Document</td>
+                <td style="width: 50%;">IFFS TRANSPORT - Confidential Document</td>
                 <td style="width: 50%; text-align: right;">Page <span class="page-number"></span></td>
             </tr>
         </table>

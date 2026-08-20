@@ -152,7 +152,7 @@ class TyreDashboardController extends Controller
     {
         $category = (int)$request->get('refill_count', 0);
         
-        $tyres = Tyre::where('refill_count', $category)
+        $tyres = Tyre::with(['currentAllocation.vehicle'])->where('refill_count', $category)
             ->where('status', '!=', 'scrap')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -174,7 +174,7 @@ class TyreDashboardController extends Controller
 
     public function categoryTyres(Request $request, $type)
     {
-        $query = Tyre::where('status', '!=', 'scrap');
+        $query = Tyre::with(['currentAllocation.vehicle'])->where('status', '!=', 'scrap');
         $title = '';
         $description = '';
         
@@ -221,14 +221,14 @@ class TyreDashboardController extends Controller
         
         $groupedTyres = [];
         // Brand New (0 refills)
-        $groupedTyres[0] = Tyre::where('refill_count', 0)
+        $groupedTyres[0] = Tyre::with(['currentAllocation.vehicle'])->where('refill_count', 0)
             ->where('status', '!=', 'scrap')
             ->orderBy('created_at', 'desc')
             ->get();
             
         // Rounds 1 to maxRounds
         for ($i = 1; $i <= $maxRounds; $i++) {
-            $groupedTyres[$i] = Tyre::where('refill_count', $i)
+            $groupedTyres[$i] = Tyre::with(['currentAllocation.vehicle'])->where('refill_count', $i)
                 ->where('status', '!=', 'scrap')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -240,7 +240,7 @@ class TyreDashboardController extends Controller
 
     public function categoryPdf(Request $request, $type)
     {
-        $query = Tyre::where('status', '!=', 'scrap');
+        $query = Tyre::with(['currentAllocation.vehicle'])->where('status', '!=', 'scrap');
         $title = '';
         
         switch ($type) {

@@ -62,13 +62,7 @@
                         </td>
                         <td>
                             <span class="badge badge-soft-primary">
-                                @if($tyre->status === 'new' && $tyre->tire_type === 'original_casing')
-                                    Used Casing Stock
-                                @elseif($tyre->status === 'used' && $tyre->refill_count > 0)
-                                    Available for Use / Stock
-                                @else
-                                    {{ $tyre->current_location ?? 'Store' }}
-                                @endif
+                                {{ $tyre->getLocationText() }}
                             </span>
                         </td>
                         <td>{{ $tyre->refill_count }}</td>

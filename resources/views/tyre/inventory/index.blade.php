@@ -391,69 +391,37 @@
                                 </td>
                                 <td>
                                     @php
-                                        $locationIcon = 'fa-map-marker-alt';
-                                        $locationText = '';
-                                        $locationClass = 'location-store';
-                                        
-                                        if($tyre->status == 'in_use') {
-                                            $locationIcon = 'fa-truck';
-                                            $locationClass = 'location-vehicle';
-                                            
-                                            // Try to get vehicle from currentAllocation
-                                            $vehicle = null;
-                                            if($tyre->currentAllocation && $tyre->currentAllocation->vehicle) {
-                                                $vehicle = $tyre->currentAllocation->vehicle;
-                                            } else {
-                                                // Try to get from allocations directly
-                                                $allocation = $tyre->allocations()->whereNull('removal_date')->with('vehicle')->first();
-                                                if($allocation && $allocation->vehicle) {
-                                                    $vehicle = $allocation->vehicle;
-                                                }
-                                            }
-                                            
-                                            if($vehicle) {
-                                                $locationText = $vehicle->lorry_number;
-                                            } else {
-                                                $locationText = 'In Use';
-                                            }
-                                        } elseif($tyre->status == 'at_vendor') {
+                                         $locationIcon = 'fa-map-marker-alt';
+                                         $locationText = $tyre->getLocationText();
+                                         $locationClass = 'location-store';
+                                         
+                                         if($tyre->status == 'in_use') {
+                                             $locationIcon = 'fa-truck';
+                                             $locationClass = 'location-vehicle';
+                                         } elseif($tyre->status == 'at_vendor') {
                                              if(in_array($tyre->current_location, ['store', 'pending_refill'])) {
                                                  $locationIcon = 'fa-warehouse';
                                                  $locationClass = 'location-store';
-                                                 $locationText = 'To Be Send to Dag';
                                              } else {
                                                  $locationIcon = 'fa-sync-alt';
                                                  $locationClass = 'location-refilling';
-                                                 $locationText = 'Refilling';
                                              }
-                                        } elseif($tyre->status == 'scrap') {
-                                            $locationIcon = 'fa-trash';
-                                            $locationClass = 'location-scrap';
-                                            $locationText = 'Scrap Yard';
-                                        } elseif($tyre->status == 'used') {
+                                         } elseif($tyre->status == 'scrap') {
+                                             $locationIcon = 'fa-trash';
+                                             $locationClass = 'location-scrap';
+                                         } elseif($tyre->status == 'used') {
                                              if($tyre->refill_count > 0) {
                                                  $locationIcon = 'fa-sync-alt';
                                                  $locationClass = 'location-refilling';
-                                                 $locationText = 'Available for Use / Stock';
                                              } else {
                                                  $locationIcon = 'fa-warehouse';
                                                  $locationClass = 'location-store';
-                                                 $locationText = 'In Stock';
                                              }
-                                        } elseif($tyre->status == 'new') {
-                                            if ($tyre->tire_type === 'original_casing') {
-                                                $locationIcon = 'fa-box';
-                                                $locationClass = 'location-store';
-                                                $locationText = 'Used Casing Stock';
-                                            } else {
-                                                $locationIcon = 'fa-box';
-                                                $locationClass = 'location-store';
-                                                $locationText = 'New Stock';
-                                            }
-                                        } else {
-                                            $locationText = ucfirst(str_replace('_', ' ', $tyre->current_location ?? 'Unknown'));
-                                        }
-                                    @endphp
+                                         } elseif($tyre->status == 'new') {
+                                             $locationIcon = 'fa-box';
+                                             $locationClass = 'location-store';
+                                         }
+                                     @endphp
                                     <span class="location-badge {{ $locationClass }}">
                                         <i class="fas {{ $locationIcon }}"></i>
                                         {{ $locationText }}
